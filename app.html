@@ -52,10 +52,25 @@
                     .then(registration => {
                         console.log('ServiceWorker registered:', registration);
                         
-                        // Check for updates every hour
+                        // Check for updates immediately and every hour
+                        registration.update();
                         setInterval(() => {
                             registration.update();
                         }, 3600000);
+                        
+                        // Listen for new service worker waiting
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New update available
+                                    console.log('New version available! Please close and reopen the app to update.');
+                                    if (window.showUpdateNotification) {
+                                        window.showUpdateNotification();
+                                    }
+                                }
+                            });
+                        });
                     })
                     .catch(err => console.log('ServiceWorker registration failed:', err));
             });
@@ -1615,12 +1630,16 @@
             const events = window.VanguardData?.getAllEvents() || [];
             let newCount = 0;
             
-            events.forEach(event => {
-                const eventDate = new Date(event.date);
-                if (eventDate > lastVisitDate) {
-                    newCount++;
-                }
-            });
+            // Count events that we haven't seen before (compare with last known event count)
+            const lastEventCount = parseInt(localStorage.getItem('vanguard_last_event_count') || '0');
+            const currentEventCount = events.length;
+            
+            if (currentEventCount > lastEventCount) {
+                newCount = currentEventCount - lastEventCount;
+            }
+            
+            // Update the stored count
+            localStorage.setItem('vanguard_last_event_count', currentEventCount.toString());
             
             return newCount;
         }
@@ -1747,6 +1766,7 @@
         <div class="nav-brand">
             <img src="./vanguard_logo.png" alt="Vanguard" style="height: 65px; margin-right: 18px; vertical-align: middle;">
             <span style="vertical-align: middle; font-size: 22px; font-weight: 600;">Bingo Analytics</span>
+            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.0.1</span>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
             <div class="nav-tabs">
@@ -8385,11 +8405,14 @@
                     btn.disabled = true;
                 }
                 
+                // Set flag to prevent welcome popup on refresh
+                window.isDataRefresh = true;
+                
                 // Fetch fresh data
                 await window.VanguardData.fetchData();
                 
-                // Update UI
-                window.VanguardData.updateDashboard();
+                // Reinitialize the app with new data (but don't show welcome popup)
+                initializeAppWithData();
                 
                 // Restore button
                 if (btn) {
@@ -8397,9 +8420,10 @@
                     btn.disabled = false;
                 }
                 
-                // Show success popup
+                // Show success popup with event count
                 setTimeout(() => {
-                    showSuccessPopup('Data refreshed successfully!');
+                    const eventCount = window.VanguardData?.getAllEvents()?.length || 0;
+                    showSuccessPopup(`Data refreshed successfully! ${eventCount} events loaded.`);
                 }, 300);
                 
             } catch (error) {
@@ -8466,6 +8490,39 @@
                 overlay.style.display = 'none';
             }, 300);
         }
+        
+        // Show update notification
+        window.showUpdateNotification = function() {
+            // Create a simple notification bar
+            const updateBar = document.createElement('div');
+            updateBar.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+                color: white;
+                padding: 12px;
+                text-align: center;
+                z-index: 10000;
+                font-size: 14px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+            updateBar.innerHTML = `
+                📱 New version available! 
+                <button onclick="location.reload()" style="
+                    background: white;
+                    color: #16a34a;
+                    border: none;
+                    padding: 4px 12px;
+                    border-radius: 4px;
+                    margin-left: 10px;
+                    cursor: pointer;
+                    font-weight: 600;
+                ">Update Now</button>
+            `;
+            document.body.appendChild(updateBar);
+        };
         
         // Show error popup
         function showErrorPopup(message) {
@@ -8654,10 +8711,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateYTDStackedChart();
                 }, 500);
                 
-                // Show welcome popup after data loads
-                setTimeout(() => {
-                    showWelcomePopup();
-                }, 100);
+                // Show welcome popup after data loads (only once, only if we have data, and not on refresh)
+                if (window.VanguardData?.getAllEvents()?.length > 0 && !window.isDataRefresh) {
+                    setTimeout(() => {
+                        // Only show if not already shown
+                        if (!window.welcomePopupShown) {
+                            showWelcomePopup();
+                            window.welcomePopupShown = true;
+                        }
+                    }, 100);
+                }
+                
+                // Clear refresh flag after initialization
+                window.isDataRefresh = false;
                 
                 // Ensure the Latest button is marked as active (after buttons are populated)
                 setTimeout(() => {
