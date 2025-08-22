@@ -1,0 +1,81 @@
+# Vanguard Bingo Analytics PWA
+
+## Files in this folder
+- `index.html` - Main application (renamed from vanguard-analytics-complete-v3.html)
+- `manifest.json` - PWA configuration file
+- `service-worker.js` - Enables offline functionality
+- `vanguard_logo.png` - App icon
+- `README.md` - This file
+
+## Quick Deploy to GitHub Pages
+
+### 1. Upload to GitHub
+1. Go to github.com and sign in
+2. Click the "+" icon → "New repository"
+3. Name it: `vanguard-analytics` (or your choice)
+4. Make it Public
+5. Click "Create repository"
+6. Click "uploading an existing file"
+7. Drag ALL files from this folder into the upload area
+8. Click "Commit changes"
+
+### 2. Enable GitHub Pages
+1. In your repository, go to Settings
+2. Scroll to "Pages" in left sidebar
+3. Under "Source", select "Deploy from a branch"
+4. Choose "main" branch and "/ (root)" folder
+5. Click Save
+6. Wait 2-5 minutes
+
+### 3. Access Your App
+Your app will be available at:
+```
+https://[your-github-username].github.io/vanguard-analytics/
+```
+
+## Testing the PWA
+
+### On Desktop (Chrome/Edge):
+1. Visit your GitHub Pages URL
+2. Look for install icon in address bar (computer with arrow)
+3. Click to install
+4. App opens in its own window
+
+### On Mobile:
+1. Visit URL in Chrome/Safari
+2. Tap browser menu
+3. Select "Add to Home Screen" or "Install App"
+4. App appears on home screen with Vanguard logo
+
+## Features
+- ✅ Installable as app on desktop and mobile
+- ✅ Works offline with cached data
+- ✅ Auto-updates from Google Sheets when online
+- ✅ Responsive design for all screen sizes
+- ✅ No server needed - runs entirely in browser
+
+## Data Source
+The app pulls data from your Google Sheets via the Apps Script URL embedded in the code. No changes needed to your Google Sheets setup.
+
+## Troubleshooting
+
+### App not installing?
+- Must be served over HTTPS (GitHub Pages provides this)
+- Try in Chrome or Edge (best PWA support)
+- Check browser console (F12) for errors
+
+### Data not loading?
+- Check internet connection
+- Verify Google Apps Script is still published
+- Look in browser console for error messages
+
+### Changes not showing?
+- After updating files on GitHub, wait 2-5 minutes
+- Clear browser cache (Ctrl+Shift+R)
+- For PWA: Uninstall and reinstall the app
+
+## Support
+For issues, check the browser console (F12) for error messages.
+
+## Version
+v1.0.0 - Initial PWA release
