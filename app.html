@@ -1269,11 +1269,11 @@
 
         /* Donut Chart */
         .donut-chart {
-            width: 180px;
-            height: 180px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             position: relative;
-            margin: 20px auto;
+            margin: 10px 0;
         }
 
         .donut-center {
@@ -1438,6 +1438,89 @@
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border-color: #667eea;
+        }
+        
+        /* Product Performance Box Styles */
+        .product-box {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .product-box.expanded {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .product-expansion {
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 300px;
+            }
+        }
+        
+        @keyframes highlightFade {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.8), 0 0 20px 5px rgba(59, 130, 246, 0.6);
+                border-color: #3b82f6;
+                transform: scale(1.02);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0), 0 0 30px 10px rgba(59, 130, 246, 0.4);
+                border-color: #3b82f6;
+                transform: scale(1.01);
+            }
+            100% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0), 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-color: #e5e7eb;
+                transform: scale(1);
+            }
+        }
+        
+        .comparison-controls-box.highlight-animation {
+            animation: highlightFade 2s ease-out;
+        }
+        
+        @media (max-width: 768px) {
+            .product-boxes-container {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Projection tooltip hover effect */
+        .projection-tooltip {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.2s, visibility 0.2s !important;
+        }
+        
+        span[style*="cursor: help"]:hover .projection-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Metric box tooltip hover effect */
+        .metric-tooltip {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.2s, visibility 0.2s !important;
+        }
+        
+        div[style*="cursor: help"]:hover .metric-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
         }
     </style>
     <script>
@@ -1739,8 +1822,8 @@
         <h2 id="refreshTitle" style="margin-top: 0; margin-bottom: 10px;">Refresh Data</h2>
         <p id="refreshMessage" style="margin-bottom: 15px;">Force download all data from server? This will replace your local cached data.</p>
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-            <button onclick="confirmRefresh()" style="background: #3b82f6;">Yes, Refresh</button>
-            <button onclick="closeRefreshPopup()" style="background: #6b7280;">Cancel</button>
+            <button onclick="confirmRefresh()" style="background: #3b82f6; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">Yes, Refresh</button>
+            <button onclick="closeRefreshPopup()" style="background: #6b7280; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
         </div>
     </div>
     
@@ -1766,7 +1849,7 @@
         <div class="nav-brand">
             <img src="./vanguard_logo.png" alt="Vanguard" style="height: 65px; margin-right: 18px; vertical-align: middle;">
             <span style="vertical-align: middle; font-size: 22px; font-weight: 600;">Bingo Analytics</span>
-            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.0.1</span>
+            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.0.3</span>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
             <div class="nav-tabs">
@@ -1820,8 +1903,74 @@
                     </div>
                     
                     <!-- RIGHT: Compare To Box -->
-                    <div class="comparison-controls-box">
-                        <div class="compare-label">COMPARE TO</div>
+                    <div class="comparison-controls-box" id="compareToBox" style="position: relative;">
+                        <div class="compare-label">
+                            COMPARE TO LOCATION AND:
+                        </div>
+                        <span style="
+                            position: absolute;
+                            top: 8px;
+                            right: 8px;
+                            width: 18px;
+                            height: 18px;
+                            background: rgba(107, 114, 128, 0.1);
+                            color: #6b7280;
+                            border-radius: 50%;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 11px;
+                            font-style: italic;
+                            cursor: help;
+                            transition: all 0.2s;
+                            border: 1px solid rgba(107, 114, 128, 0.2);
+                        " 
+                        onmouseover="
+                            this.style.background='rgba(107, 114, 128, 0.2)';
+                            var tooltip = this.querySelector('.tooltip-content');
+                            if (tooltip) tooltip.style.display = 'block';
+                        " 
+                        onmouseout="
+                            this.style.background='rgba(107, 114, 128, 0.1)';
+                            var tooltip = this.querySelector('.tooltip-content');
+                            if (tooltip) tooltip.style.display = 'none';
+                        ">
+                            i
+                            <div class="tooltip-content" style="
+                                display: none;
+                                position: absolute;
+                                top: 100%;
+                                right: 0;
+                                margin-top: 5px;
+                                background: rgba(0, 0, 0, 0.9);
+                                color: white;
+                                padding: 12px 15px;
+                                border-radius: 8px;
+                                font-size: 11px;
+                                font-style: normal;
+                                font-weight: normal;
+                                text-align: left;
+                                white-space: pre-line;
+                                line-height: 1.5;
+                                z-index: 10000;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                                min-width: 320px;
+                                max-width: 380px;
+                            ">Compare To Box Elements:
+
+Location Matching: Always matches events from the same location (SC or RWC). This is automatic and cannot be changed.
+
+Time Period (1M/3M/1Y): Selects events from 1 month, 3 months, or 1 year ago to compare against. Creates your comparison pool from this historical timeframe.
+
+Day Only: When checked, only compares to events on the exact same day of week and session type. For example, Monday events only compare to other Mondays, Late Saturday only compares to other Late Saturday sessions.
+
+Hotball Filter: Matches events by their Hotball jackpot amount:
+  • None: Includes all events regardless of Hotball
+  • Category: Groups by similar Hotball ranges
+  • 10%/20%: Only events within ±10% or ±20% of current Hotball amount
+
+Pool: Shows the number of historical events that match all your selected filters. This is your comparison group.</div>
+                        </span>
                         <div class="comparison-controls">
                             <div class="period-buttons">
                                 <button data-period="1M" onclick="window.EventManager.setComparisonPeriod('1M')" title="Compare to events from 30-60 days ago">1M</button>
@@ -1930,6 +2079,12 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 12px 0; position: relative; z-index: 10; min-height: 40px;">
                         <div class="chart-title" style="white-space: nowrap; margin-right: 20px;">Charts</div>
                         <div style="display: flex; gap: 15px; align-items: center; flex-shrink: 0;">
+                            <!-- Location Toggle Buttons -->
+                            <div style="display: flex; gap: 4px; background: #f1f5f9; padding: 3px; border-radius: 6px;">
+                                <button onclick="updateChartLocation('combined')" id="chart-loc-combined" style="padding: 5px 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; transition: all 0.2s;">Combined</button>
+                                <button onclick="updateChartLocation('SC')" id="chart-loc-sc" style="padding: 5px 10px; background: transparent; color: #64748b; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; transition: all 0.2s;">SC</button>
+                                <button onclick="updateChartLocation('RWC')" id="chart-loc-rwc" style="padding: 5px 10px; background: transparent; color: #64748b; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; transition: all 0.2s;">RWC</button>
+                            </div>
                             <select id="chartTypeSelector" onchange="updateChartDisplay(this.value)" style="padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; background: white; cursor: pointer;">
                                 <option value="ytd">YTD Gross and Net Revenue</option>
                                 <option value="12months">12 Months Revenue</option>
@@ -1946,7 +2101,7 @@
                 </div>
                 
                 <!-- Revenue Distribution Donut Chart -->
-                <div class="chart-container" style="max-width: 350px;">
+                <div class="chart-container" style="max-width: 350px; overflow: hidden;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <div class="chart-title">Revenue Distribution</div>
                         <select id="donutSelector" class="chart-selector" style="background: #ffffff; color: #374151; border: 1px solid #d1d5db;" onchange="switchDonutChart(this.value)">
@@ -2101,6 +2256,161 @@
                     </div>
                 </div>
             </div> -->
+            
+            <!-- Product Performance Boxes Section -->
+            <div class="product-boxes-section" style="margin-top: 30px; padding: 0 20px;">
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h3 style="font-size: 18px; font-weight: 700; color: #1e293b;">Product Performance - <span id="productBoxEventInfo" style="font-size: 16px; font-weight: 500; color: #475569;">Loading...</span></h3>
+                        <div style="font-size: 12px; color: #64748b;">Click boxes to expand details</div>
+                    </div>
+                    <div style="font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 10px;">
+                        <span>Compared to: <span id="productBoxComparisonInfo" style="font-weight: 500; color: #475569;">No comparison</span></span>
+                        <button id="changeComparisonBtn" style="padding: 2px 8px; font-size: 11px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">Change</button>
+                    </div>
+                </div>
+                
+                <div class="product-boxes-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <!-- Flash Product Box -->
+                    <div class="product-box expandable" data-product="flash" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #fbbf24; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s; position: relative;">
+                        <div class="product-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <span style="font-size: 14px; font-weight: 600; color: #92400e;">FLASH</span>
+                                <span style="font-size: 12px; color: #92400e; opacity: 0.9;" id="flashEventPercent">% of Event - 0%</span>
+                            </div>
+                            <div class="product-metrics">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #92400e;">Revenue</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #78350f;" id="flashRevenue">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="flashRevenueChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #92400e;">Payouts</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #78350f;" id="flashPayouts">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="flashPayoutsChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(251, 191, 36, 0.3); margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #92400e; font-weight: 600;">Net Revenue</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 700; color: #78350f;" id="flashNet">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="flashNetChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(251, 191, 36, 0.3);">
+                                    <span style="font-size: 13px; color: #92400e;">Margin</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 18px; font-weight: 700; color: #78350f;" id="flashMargin">0%</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="flashMarginChange">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="product-expansion" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(251, 191, 36, 0.3);">
+                            <div style="font-size: 12px; color: #92400e; margin-bottom: 10px; font-weight: 600;">Comparison Pool Average</div>
+                            <div id="flashComparisonDetails" style="font-size: 11px; color: #78350f;">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Strip Product Box -->
+                    <div class="product-box expandable" data-product="strip" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8); border: 1px solid #ec4899; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s; position: relative;">
+                        <div class="product-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <span style="font-size: 14px; font-weight: 600; color: #831843;">STRIP</span>
+                                <span style="font-size: 12px; color: #831843; opacity: 0.9;" id="stripEventPercent">% of Event - 0%</span>
+                            </div>
+                            <div class="product-metrics">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #831843;">Revenue</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #701a75;" id="stripRevenue">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="stripRevenueChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #831843;">Payouts</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #701a75;" id="stripPayouts">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="stripPayoutsChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(236, 72, 153, 0.3); margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #831843; font-weight: 600;">Net Revenue</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 700; color: #701a75;" id="stripNet">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="stripNetChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(236, 72, 153, 0.3);">
+                                    <span style="font-size: 13px; color: #831843;">Margin</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 18px; font-weight: 700; color: #701a75;" id="stripMargin">0%</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="stripMarginChange">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="product-expansion" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(236, 72, 153, 0.3);">
+                            <div style="font-size: 12px; color: #831843; margin-bottom: 10px; font-weight: 600;">Comparison Pool Average</div>
+                            <div id="stripComparisonDetails" style="font-size: 11px; color: #701a75;">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Other Product Box -->
+                    <div class="product-box expandable" data-product="other" style="background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border: 1px solid #6366f1; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s; position: relative;">
+                        <div class="product-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <span style="font-size: 14px; font-weight: 600; color: #312e81;">OTHER</span>
+                                <span style="font-size: 12px; color: #312e81; opacity: 0.9;" id="otherEventPercent">% of Event - 0%</span>
+                            </div>
+                            <div class="product-metrics">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #312e81;">Revenue</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #1e1b4b;" id="otherRevenue">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="otherRevenueChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #312e81;">Payouts</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #1e1b4b;" id="otherPayouts">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="otherPayoutsChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(99, 102, 241, 0.3); margin-bottom: 8px;">
+                                    <span style="font-size: 13px; color: #312e81; font-weight: 600;">Net Revenue</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 700; color: #1e1b4b;" id="otherNet">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="otherNetChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(99, 102, 241, 0.3);">
+                                    <span style="font-size: 13px; color: #312e81;">Margin</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 18px; font-weight: 700; color: #1e1b4b;" id="otherMargin">N/A</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="otherMarginChange">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="product-expansion" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(99, 102, 241, 0.3);">
+                            <div style="font-size: 12px; color: #312e81; margin-bottom: 10px; font-weight: 600;">Comparison Pool Average</div>
+                            <div id="otherComparisonDetails" style="font-size: 11px; color: #1e1b4b;">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div><!-- End Events View -->
 
@@ -2145,8 +2455,8 @@
                         </div>
                     </div>
                     
-                    <!-- Month/Quarter Range Display -->
-                    <span id="reportingMonthRange" style="color: #64748b; font-size: 14px;">Loading...</span>
+                    <!-- Month/Quarter Range Display - Hidden as redundant -->
+                    <span id="reportingMonthRange" style="display: none;">Loading...</span>
                 </div>
             </div>
             
@@ -2227,6 +2537,97 @@
         // ============================================
         // EVENT SYSTEM ARCHITECTURE - COMPLETE REWRITE
         // ============================================
+        
+        // ============================================
+        // TOOLTIP HELPER FUNCTIONS - Consistent tooltips across app
+        // ============================================
+        const TooltipHelpers = {
+            // Create info icon with tooltip (grey circle with lowercase i)
+            createInfoIcon: function(tooltipContent) {
+                return `
+                    <span style="
+                        position: absolute;
+                        top: 8px;
+                        right: 8px;
+                        width: 18px;
+                        height: 18px;
+                        background: rgba(107, 114, 128, 0.1);
+                        color: #6b7280;
+                        border-radius: 50%;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 11px;
+                        font-style: italic;
+                        cursor: help;
+                        transition: all 0.2s;
+                        border: 1px solid rgba(107, 114, 128, 0.2);
+                    " 
+                    onmouseover="
+                        this.style.background='rgba(107, 114, 128, 0.2)';
+                        var tooltip = this.querySelector('.tooltip-content');
+                        if (tooltip) tooltip.style.display = 'block';
+                    " 
+                    onmouseout="
+                        this.style.background='rgba(107, 114, 128, 0.1)';
+                        var tooltip = this.querySelector('.tooltip-content');
+                        if (tooltip) tooltip.style.display = 'none';
+                    ">
+                        i
+                        <div class="tooltip-content" style="
+                            display: none;
+                            position: absolute;
+                            top: 100%;
+                            right: 0;
+                            margin-top: 5px;
+                            background: rgba(0, 0, 0, 0.9);
+                            color: white;
+                            padding: 12px 15px;
+                            border-radius: 8px;
+                            font-size: 11px;
+                            font-style: normal;
+                            font-weight: normal;
+                            text-align: left;
+                            white-space: pre-line;
+                            line-height: 1.5;
+                            z-index: 10000;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                            min-width: 280px;
+                            max-width: 380px;
+                        ">${tooltipContent}</div>
+                    </span>
+                `;
+            },
+            
+            // Create projection tooltip for metric boxes
+            createMetricTooltip: function(tooltipContent) {
+                return `
+                    <div style="
+                        position: absolute;
+                        top: 0;
+                        right: calc(100% + 10px);
+                        background: rgba(0, 0, 0, 0.9);
+                        color: white;
+                        padding: 10px 15px;
+                        border-radius: 8px;
+                        font-size: 11px;
+                        white-space: pre-line;
+                        line-height: 1.5;
+                        z-index: 10000;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        min-width: 250px;
+                        max-width: 350px;
+                        opacity: 0;
+                        visibility: hidden;
+                        transition: opacity 0.2s, visibility 0.2s;
+                        pointer-events: none;
+                    " 
+                    onmouseover="this.style.opacity='1'; this.style.visibility='visible';"
+                    onmouseout="this.style.opacity='0'; this.style.visibility='hidden';"
+                    >${tooltipContent}</div>
+                `;
+            }
+        };
         
         // Simple VanguardData stub to provide compatibility without external JS file
         window.VanguardData = {
@@ -2330,12 +2731,33 @@
                         }
                         
                         // If no good day, derive from date
-                        if (!cleanDay || cleanDay === 'Unknown') {
+                        if (!cleanDay || cleanDay === 'Unknown' || cleanDay === '') {
                             if (dateValue) {
-                                const date = new Date(dateValue);
-                                if (!isNaN(date.getTime())) {
+                                // Parse the date more carefully
+                                let date;
+                                if (typeof dateValue === 'string') {
+                                    // Handle different date formats
+                                    if (dateValue.includes('/')) {
+                                        // MM/DD/YYYY format
+                                        const parts = dateValue.split('/');
+                                        if (parts.length === 3) {
+                                            // new Date(year, monthIndex, day) - month is 0-based
+                                            date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                                        }
+                                    } else {
+                                        date = new Date(dateValue);
+                                    }
+                                } else {
+                                    date = new Date(dateValue);
+                                }
+                                
+                                if (date && !isNaN(date.getTime())) {
                                     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                                    cleanDay = days[date.getDay()];
+                                    const dayIndex = date.getDay();
+                                    cleanDay = days[dayIndex];
+                                    console.log(`${this.location || 'Location'}: Parsed '${dateValue}' -> ${date.toDateString()} -> ${cleanDay} (index: ${dayIndex})`);
+                                } else {
+                                    console.log(`${this.location || 'Location'}: Failed to parse date '${dateValue}'`);
                                 }
                             }
                         }
@@ -2347,7 +2769,7 @@
                                 : cleanDay || 'Unknown';
                             
                             scProcessed++;
-                            events.push({
+                            const scEvent = {
                                 location: 'SC',
                                 date: dateHeader,
                                 dateValue: dateValue || dateHeader,
@@ -2356,7 +2778,20 @@
                                 columnIndex: col.index,
                                 index: col.index,  // For compatibility
                                 columnData: col.data
-                            });
+                            };
+                            
+                            // Log SC events with day issues
+                            if (displayDay === 'Unknown' || !displayDay || displayDay.includes('undefined')) {
+                                console.log('SC Event with day issue:', {
+                                    header: dateHeader,
+                                    dateValue: dateValue,
+                                    row4: row4Data,
+                                    derivedDay: cleanDay,
+                                    displayDay: displayDay
+                                });
+                            }
+                            
+                            events.push(scEvent);
                         }
                     });
                     console.log(`SC: Processed ${scProcessed} events from ${this.data.sc.columns.length} columns (skipped ${skippedColumns})`);
@@ -2404,12 +2839,33 @@
                         }
                         
                         // If no good day, derive from date
-                        if (!cleanDay || cleanDay === 'Unknown') {
+                        if (!cleanDay || cleanDay === 'Unknown' || cleanDay === '') {
                             if (dateValue) {
-                                const date = new Date(dateValue);
-                                if (!isNaN(date.getTime())) {
+                                // Parse the date more carefully
+                                let date;
+                                if (typeof dateValue === 'string') {
+                                    // Handle different date formats
+                                    if (dateValue.includes('/')) {
+                                        // MM/DD/YYYY format
+                                        const parts = dateValue.split('/');
+                                        if (parts.length === 3) {
+                                            // new Date(year, monthIndex, day) - month is 0-based
+                                            date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                                        }
+                                    } else {
+                                        date = new Date(dateValue);
+                                    }
+                                } else {
+                                    date = new Date(dateValue);
+                                }
+                                
+                                if (date && !isNaN(date.getTime())) {
                                     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                                    cleanDay = days[date.getDay()];
+                                    const dayIndex = date.getDay();
+                                    cleanDay = days[dayIndex];
+                                    console.log(`${this.location || 'Location'}: Parsed '${dateValue}' -> ${date.toDateString()} -> ${cleanDay} (index: ${dayIndex})`);
+                                } else {
+                                    console.log(`${this.location || 'Location'}: Failed to parse date '${dateValue}'`);
                                 }
                             }
                         }
@@ -2421,7 +2877,7 @@
                                 : cleanDay || 'Unknown';
                             
                             rwcProcessed++;
-                            events.push({
+                            const rwcEvent = {
                                 location: 'RWC',
                                 date: dateHeader,
                                 dateValue: dateValue || dateHeader,
@@ -2430,7 +2886,20 @@
                                 columnIndex: col.index,
                                 index: col.index,  // For compatibility
                                 columnData: col.data
-                            });
+                            };
+                            
+                            // Log RWC events with day issues
+                            if (displayDay === 'Unknown' || !displayDay || displayDay.includes('undefined')) {
+                                console.log('RWC Event with day issue:', {
+                                    header: dateHeader,
+                                    dateValue: dateValue,
+                                    row4: row4Data,
+                                    derivedDay: cleanDay,
+                                    displayDay: displayDay
+                                });
+                            }
+                            
+                            events.push(rwcEvent);
                         }
                     });
                     console.log(`RWC: Processed ${rwcProcessed} events from ${this.data.rwc.columns.length} columns (skipped ${rwcSkipped})`);
@@ -2623,7 +3092,28 @@
                 // Clean up the dayInfo - remove any parentheses and extra spaces
                 const cleanDayInfo = String(this.dayInfo).replace(/\s*\([^)]*\)/g, '').trim();
                 const dayParts = cleanDayInfo.split(/\s+/);
-                this.day = dayParts[0] || '';
+                let day = dayParts[0] || '';
+                
+                // Fix common typos and normalize day names
+                const originalDay = day;
+                const dayLower = day.toLowerCase();
+                if (dayLower === 'tthursday' || dayLower === 'thhursday' || dayLower === 'thurday') {
+                    day = 'Thursday';
+                    console.log(`🔧 Fixed typo: "${originalDay}" -> "Thursday" for event on ${this.date} at ${location}`);
+                } else if (dayLower === 'wednessday' || dayLower === 'wednsday') {
+                    day = 'Wednesday';
+                    console.log(`🔧 Fixed typo: "${originalDay}" -> "Wednesday" for event on ${this.date} at ${location}`);
+                } else if (dayLower === 'tueday' || dayLower === 'tusday') {
+                    day = 'Tuesday';
+                    console.log(`🔧 Fixed typo: "${originalDay}" -> "Tuesday" for event on ${this.date} at ${location}`);
+                }
+                
+                // Log if we still have the typo
+                if (day.toLowerCase() === 'tthursday') {
+                    console.error(`⚠️ TYPO NOT FIXED: Day is still "${day}" for event on ${this.date} at ${location}`);
+                }
+                
+                this.day = day;
                 this.isLate = this.dayInfo.includes('Late') || 
                              this.dayInfo.includes('LATE') || 
                              this.dayInfo.includes('PM');
@@ -2773,6 +3263,23 @@
                     return parseDate(a.date) - parseDate(b.date); // CHANGED: oldest first
                 });
                 
+                // Log RWC day distribution
+                if (this.rwcDayCount) {
+                    console.log('RWC Events by Day:', this.rwcDayCount);
+                    console.log(`Total RWC events: ${this.eventsByLocation.RWC.length}`);
+                    
+                    // Check for data issues
+                    const thursdays = this.eventsByLocation.RWC.filter(e => e.day.toLowerCase().includes('thu'));
+                    console.log(`RWC Thursday events: ${thursdays.length}`);
+                    if (thursdays.length > 0) {
+                        console.log('Sample Thursday events:', thursdays.slice(0, 5).map(e => ({
+                            date: e.date,
+                            day: e.day,
+                            dayInfo: e.dayInfo
+                        })));
+                    }
+                }
+                
                 // Events loaded successfully
                 return true;
             }
@@ -2781,6 +3288,18 @@
                 this.events.push(event);
                 this.eventsById[event.id] = event;
                 this.eventsByLocation[event.location].push(event);
+                
+                // Debug RWC day values
+                if (event.location === 'RWC') {
+                    if (!this.rwcDayCount) this.rwcDayCount = {};
+                    const dayKey = event.day || 'Unknown';
+                    this.rwcDayCount[dayKey] = (this.rwcDayCount[dayKey] || 0) + 1;
+                    
+                    // Log Thursday events specifically
+                    if (dayKey.toLowerCase().includes('thu')) {
+                        console.log('RWC Thursday found:', event.date, event.day, event.dayInfo);
+                    }
+                }
             }
             
             getLatestEvent() {
@@ -3164,6 +3683,8 @@
                             break;
                     }
                 });
+                
+                // Product boxes will be updated by updateComparisons() which runs after this
             }
             
             updateEventTitle() {
@@ -3220,18 +3741,18 @@
                 const stripsDeg = stripsPercent * 3.6;
                 
                 revenueContainer.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 20px; margin-top: -20px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-top: -20px; padding: 0 5px;">
                         <div class="donut-chart" style="background: conic-gradient(
                             #60a5fa 0deg ${flashDeg}deg,
                             #fbbf24 ${flashDeg}deg ${flashDeg + stripsDeg}deg,
                             #34d399 ${flashDeg + stripsDeg}deg 360deg
-                        ); flex-shrink: 0;">
+                        ); flex-shrink: 0; width: 160px; height: 160px;">
                             <div class="donut-center">
-                                <div class="donut-total" style="font-size: 24px;">$${(total / 1000).toFixed(1)}K</div>
+                                <div class="donut-total" style="font-size: 22px;">$${(total / 1000).toFixed(1)}K</div>
                                 <div class="donut-label" style="font-size: 10px;">Total Sales</div>
                             </div>
                         </div>
-                        <div class="revenue-legend" style="position: static; transform: none; bottom: auto; left: auto; flex-direction: column; gap: 5px; font-size: 10px;">
+                        <div class="revenue-legend" style="position: static; transform: none; bottom: auto; left: auto; flex-direction: column; gap: 5px; font-size: 10px; flex: 1; min-width: 0;">
                             <div class="legend-item" style="font-size: 11px; margin: 3px;">
                                 <span class="legend-color" style="background: #60a5fa; width: 10px; height: 10px;"></span>
                                 <span style="font-size: 11px;">Flash ${flashPercent.toFixed(1)}%</span>
@@ -3334,14 +3855,14 @@
                 });
                 
                 payoutsContainer.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 20px; margin-top: -20px;">
-                        <div class="donut-chart" style="background: conic-gradient(${gradientStr}); flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-top: -20px; padding: 0 5px;">
+                        <div class="donut-chart" style="background: conic-gradient(${gradientStr}); flex-shrink: 0; width: 160px; height: 160px;">
                             <div class="donut-center">
-                                <div class="donut-total" style="font-size: 24px;">$${(total / 1000).toFixed(1)}K</div>
+                                <div class="donut-total" style="font-size: 22px;">$${(total / 1000).toFixed(1)}K</div>
                                 <div class="donut-label" style="font-size: 10px;">Total Payouts</div>
                             </div>
                         </div>
-                        <div class="revenue-legend" style="position: static; transform: none; bottom: auto; left: auto; flex-direction: column; gap: 5px; font-size: 10px;">
+                        <div class="revenue-legend" style="position: static; transform: none; bottom: auto; left: auto; flex-direction: column; gap: 5px; font-size: 10px; flex: 1; min-width: 0;">
                             ${legendHTML}
                         </div>
                     </div>
@@ -3456,6 +3977,8 @@
                 
                 // Filter events by location (ALWAYS filter by location)
                 let pool = this.eventsByLocation[this.currentEvent.location] || [];
+                console.log(`Starting pool: ${pool.length} ${this.currentEvent.location} events total`);
+                console.log(`Date range: ${startDate.toLocaleDateString()} to ${currentDate.toLocaleDateString()}`);
                 
                 // Filter by date range
                 pool = pool.filter(event => {
@@ -3463,12 +3986,53 @@
                     const inRange = eventDate >= startDate && eventDate < currentDate && event.id !== this.currentEvent.id;
                     return inRange;
                 });
+                console.log(`After date filter: ${pool.length} events in ${this.comparisonPeriod} range`);
                 
                 // Apply Day Only filter if enabled
                 if (this.dayOnlyFilter) {
+                    console.log('=== DAY ONLY FILTER DEBUG ===');
+                    console.log('Current Event:', {
+                        day: this.currentEvent.day,
+                        isLate: this.currentEvent.isLate,
+                        location: this.currentEvent.location
+                    });
+                    
+                    // Count events by day BEFORE filtering
+                    const dayCount = {};
+                    pool.forEach(e => {
+                        const day = e.day || 'Unknown';
+                        dayCount[day] = (dayCount[day] || 0) + 1;
+                    });
+                    console.log('Pool events by day BEFORE filter:', dayCount);
+                    console.log(`Total in pool: ${pool.length}`);
+                    
                     pool = pool.filter(event => {
-                        return event.day === this.currentEvent.day && 
-                               event.isLate === this.currentEvent.isLate;
+                        // Normalize day strings for comparison
+                        let currentDay = (this.currentEvent.day || '').toLowerCase().replace(/[^a-z]/g, '');
+                        let eventDay = (event.day || '').toLowerCase().replace(/[^a-z]/g, '');
+                        
+                        // Extract just the day name without (Late) suffix BEFORE fixing typos
+                        let currentDayBase = currentDay.replace('late', '').trim();
+                        let eventDayBase = eventDay.replace('late', '').trim();
+                        
+                        // Fix common typos in comparison
+                        if (currentDayBase === 'tthursday') currentDayBase = 'thursday';
+                        if (eventDayBase === 'tthursday') eventDayBase = 'thursday';
+                        
+                        const matches = currentDayBase === eventDayBase && 
+                                      event.isLate === this.currentEvent.isLate;
+                        
+                        if (event.location === 'RWC' && !matches) {
+                            console.log('RWC Event filtered out:', {
+                                eventDay: event.day,
+                                eventDayNorm: eventDayBase,
+                                currentDayNorm: currentDayBase,
+                                isLate: event.isLate,
+                                date: event.date
+                            });
+                        }
+                        
+                        return matches;
                     });
                 }
                 
@@ -3509,6 +4073,10 @@
             updateComparisons() {
                 const pool = this.getComparisonPool();
                 
+                // Store the comparison pool for use by product boxes
+                this.comparisonEvents = pool;
+                console.log('[DEBUG] Updated comparison pool with', pool.length, 'events');
+                
                 // Update pool counter
                 const poolCounter = document.getElementById('comparisonPoolCount');
                 if (poolCounter) {
@@ -3520,6 +4088,10 @@
                 // If no comparison events, show N/A
                 if (pool.length === 0) {
                     this.clearComparisons();
+                    // Update product boxes even with empty pool
+                    if (document.getElementById('events-view').style.display !== 'none' && this.currentEvent) {
+                        updateProductBoxes(this.currentEvent, []);
+                    }
                     return;
                 }
                 
@@ -3679,6 +4251,11 @@
                         }
                     }
                 });
+                
+                // Update product boxes with the new comparison pool
+                if (document.getElementById('events-view').style.display !== 'none' && this.currentEvent) {
+                    updateProductBoxes(this.currentEvent, this.comparisonEvents);
+                }
             }
             
             clearComparisons() {
@@ -4046,101 +4623,6 @@
         */
         
         // ============================================================
-        // LEGACY DUPLICATE: updateHotballDisplay
-        // TODO: Remove - Use EventManager.updateHotballDisplay() instead
-        // ============================================================
-        /* COMMENTING OUT - DUPLICATE FUNCTION
-        function updateHotballDisplay(event) {
-            if (!event) return;
-            
-            // Get Hotball Total from row 36
-            const hotballTotal = 0; // Hotball not in new structure
-            
-            // Update value display
-            const hotballValueEl = document.getElementById('hotballValue');
-            if (hotballValueEl) {
-                hotballValueEl.textContent = '$' + hotballTotal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            }
-            
-            // Determine color, fill percentage, and status based on value ranges
-            const hotballCircle = document.getElementById('hotballCircle');
-            const hotballStatus = document.getElementById('hotballStatus');
-            let fillPercent = 0;
-            let gradientColor = '';
-            let borderColor = '';
-            let statusText = '';
-            let glowColor = '';
-            
-            if (hotballTotal < 5000) {
-                // Green: $0 - $4,999
-                fillPercent = (hotballTotal / 4999) * 100;
-                gradientColor = '#22c55e'; // Green
-                borderColor = '#16a34a';
-                statusText = 'LOW';
-                glowColor = 'rgba(34, 197, 94, 0.4)';
-            } else if (hotballTotal < 10000) {
-                // Yellow: $5,000 - $9,999
-                fillPercent = ((hotballTotal - 5000) / 5000) * 100;
-                gradientColor = '#fbbf24'; // Yellow
-                borderColor = '#f59e0b';
-                statusText = 'MEDIUM';
-                glowColor = 'rgba(251, 191, 36, 0.4)';
-            } else {
-                // Red: $10,000+
-                fillPercent = 100;
-                gradientColor = '#ef4444'; // Red
-                borderColor = '#dc2626';
-                statusText = 'HIGH';
-                glowColor = 'rgba(239, 68, 68, 0.6)';
-                // Add glowing animation for red
-                hotballCircle.style.animation = 'pulse 1.5s ease-in-out infinite';
-            }
-            
-            // Apply styles
-            if (hotballCircle) {
-                fillPercent = Math.min(100, Math.max(0, fillPercent)); // Clamp between 0-100
-                hotballCircle.style.background = `linear-gradient(to top, ${gradientColor} 0%, ${gradientColor} ${fillPercent}%, #ffffff ${fillPercent}%, #ffffff 100%)`;
-                hotballCircle.style.border = `2px solid ${borderColor}`;
-                hotballCircle.style.boxShadow = `0 5px 20px ${glowColor}`;
-                
-                // Remove animation if not red
-                if (hotballTotal < 10000) {
-                    hotballCircle.style.animation = '';
-                }
-            }
-            
-            if (hotballStatus) {
-                hotballStatus.textContent = statusText;
-                hotballStatus.style.color = gradientColor;
-            }
-            
-            // Calculate Events since Hotball (based on row 35)
-            const events = window.VanguardData.getAllEvents();
-            const currentLocation = event.location;
-            const locationEvents = events.filter(e => e.location === currentLocation);
-            
-            // Sort by date (newest first)
-            locationEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            // Find current event index
-            const currentIndex = locationEvents.findIndex(e => 
-                e.date === event.date && e.isLate === event.isLate
-            );
-            
-            // Use EventManager's calculation for events since hotball
-            if (window.EventManager && window.EventManager.currentEvent) {
-                const eventsSince = window.EventManager.getEventsSince(window.EventManager.currentEvent);
-                const eventsSinceEl = document.getElementById('eventsSinceHotball');
-                if (eventsSinceEl) {
-                    if (eventsSince === null) {
-                        eventsSinceEl.textContent = 'N/A';
-                    } else {
-                        eventsSinceEl.textContent = eventsSince;
-                    }
-                }
-            }
-        }
-        END OF COMMENTED DUPLICATE */
         
         // ============================================================
         // SECTION: VIEW SWITCHING AND TAB MANAGEMENT  
@@ -4195,6 +4677,13 @@
             
             // Clean up any misplaced elements when switching views
             if (view !== 'events') {
+                // Hide product boxes when not on Events view
+                const productBoxes = document.querySelector('.product-boxes-section');
+                if (productBoxes) {
+                    console.log('[DEBUG] Hiding product boxes on', view, 'view');
+                    productBoxes.style.display = 'none';
+                }
+                
                 // Remove comparison cards
                 const strayCards = document.querySelectorAll('.comparison-cards');
                 strayCards.forEach(card => {
@@ -4213,6 +4702,13 @@
                         }
                     }
                 });
+            } else {
+                // Show product boxes when on Events view
+                const productBoxes = document.querySelector('.product-boxes-section');
+                if (productBoxes) {
+                    console.log('[DEBUG] Showing product boxes on Events view');
+                    productBoxes.style.display = 'block';
+                }
             }
             
             // Show selected view
@@ -4370,104 +4866,7 @@
             console.log('Selected event:', eventId, selectedEvent);
         }
         
-        // ============================================================
-        // LEGACY DUPLICATE: updateEventMetrics
-        // TODO: Remove - Use EventManager.updateEventMetrics() instead
-        // ============================================================
-        /* COMMENTING OUT - DUPLICATE FUNCTION
-        function updateEventMetrics(event) {
-            if (!event) return;
-            
-            // Update the event title and metadata
-            const titleEl = document.querySelector('.visual-event-title');
-            const metaEls = document.querySelectorAll('.visual-meta-item');
-            
-            if (titleEl) {
-                titleEl.textContent = `${event.location} - ${event.day} ${event.isLate ? '(Late)' : ''}`;
-            }
-            
-            const metaValueEls = document.querySelectorAll('.visual-meta-item .meta-value');
-            if (metaValueEls.length >= 3) {
-                // Format the date properly
-                const dateStr = event.getDisplayDate ? event.getDisplayDate() : event.date;
-                metaValueEls[0].textContent = dateStr;
-                metaValueEls[1].textContent = event.isLate ? 'Late Session' : 'Regular Session';
-                metaValueEls[2].textContent = event.location === 'SC' ? 'Santa Clara' : 'Redwood City';
-            }
-            
-            // Update spotlight metrics
-            const totalSales = window.VanguardData.getEventValue(event, 12);
-            const payouts = window.VanguardData.getEventValue(event, 29);
-            const netSales = window.VanguardData.getEventValue(event, 31);
-            const attendance = window.VanguardData.getEventValue(event, 37);
-            const margin = totalSales > 0 ? (netSales / totalSales * 100) : 0;
-            const rpa = attendance > 0 ? (totalSales / attendance) : 0;
-            
-            // Update metric cards - find by label text
-            const cards = document.querySelectorAll('.spotlight-card');
-            cards.forEach(card => {
-                const label = card.querySelector('.spotlight-label')?.textContent;
-                const valueEl = card.querySelector('.spotlight-value');
-                
-                if (!label || !valueEl) return;
-                
-                switch(label) {
-                    case 'Net Sales':
-                        valueEl.textContent = '$' + netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        break;
-                    case 'Total Sales':
-                        valueEl.textContent = '$' + totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        break;
-                    case 'Payouts':
-                        valueEl.textContent = '$' + payouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        break;
-                    case 'Margin':
-                        valueEl.textContent = margin.toFixed(1) + '%';
-                        break;
-                    case 'RPA':
-                        valueEl.textContent = '$' + rpa.toFixed(0);
-                        break;
-                    case 'Attendance':
-                        valueEl.textContent = attendance.toFixed(0);
-                        break;
-                }
-            });
-            
-            console.log('Updated metrics for event:', event);
-        }
-        END OF COMMENTED DUPLICATE */
         
-        /* COMMENTING OUT - DUPLICATE FUNCTION
-        function updateEventTitle(eventId) {
-            const titleElement = document.querySelector('#events-view .visual-header h1');
-            if (!titleElement) return;
-            
-            const eventNames = {
-                'latest': 'Latest Event',
-                'tuesday-17': 'Tuesday 17th',
-                'wednesday-16': 'Wednesday 16th',
-                'friday-14-late': 'Friday 14th - Late',
-                'thursday-13': 'Thursday 13th',
-                'wednesday-12-late': 'Wednesday 12th - Late',
-                'tuesday-11': 'Tuesday 11th',
-                'monday-10': 'Monday 10th',
-                'sunday-9-late': 'Sunday 9th - Late',
-                'saturday-8': 'Saturday 8th',
-                'friday-7-late': 'Friday 7th - Late',
-                'thursday-6': 'Thursday 6th',
-                'wednesday-5': 'Wednesday 5th',
-                'tuesday-4-late': 'Tuesday 4th - Late',
-                'monday-3': 'Monday 3rd',
-                'sunday-2': 'Sunday 2nd',
-                'saturday-1-late': 'Saturday 1st - Late'
-            };
-            
-            const eventName = eventNames[eventId] || eventId;
-            if (titleElement.tagName === 'H1') {
-                titleElement.textContent = `${eventName} - Session Analysis`;
-            }
-        }
-        END OF COMMENTED DUPLICATE */
 
         function toggleDataLabels(show) {
             // Toggle all data labels in the current chart
@@ -4484,6 +4883,449 @@
             }
         }
 
+        // Product Performance Box Functions
+        function updateProductBoxes(currentEvent, comparisonPool) {
+            console.log('[DEBUG] updateProductBoxes called');
+            console.log('[DEBUG] Current event:', currentEvent);
+            console.log('[DEBUG] Comparison pool size:', comparisonPool ? comparisonPool.length : 0);
+            
+            // Update event info in header
+            const eventInfoEl = document.getElementById('productBoxEventInfo');
+            if (eventInfoEl) {
+                if (currentEvent) {
+                    const location = currentEvent.location || 'Unknown';
+                    const day = currentEvent.day || 'Unknown';
+                    const date = currentEvent.date || 'Unknown';
+                    const isLate = currentEvent.isLate ? ' (Late)' : '';
+                    eventInfoEl.textContent = `${location} - ${day} ${date}${isLate}`;
+                } else {
+                    eventInfoEl.textContent = 'No Event Selected';
+                }
+            }
+            
+            // Update comparison info
+            const comparisonInfoEl = document.getElementById('productBoxComparisonInfo');
+            if (comparisonInfoEl && window.EventManager) {
+                const parts = [];
+                
+                // Time period
+                const period = window.EventManager.comparisonPeriod || '3M';
+                const periodText = period === '1M' ? '1 Month' : 
+                                  period === '3M' ? '3 Months' : 
+                                  period === '1Y' ? '1 Year' : period;
+                parts.push(periodText);
+                
+                // Day matching
+                if (window.EventManager.dayOnlyFilter) {
+                    parts.push('Exact Day Match');
+                } else {
+                    parts.push('No Day Matching');
+                }
+                
+                // Hotball filter
+                const hotball = window.EventManager.hotballFilter;
+                if (hotball === 'category') {
+                    parts.push('Hotball Category Match');
+                } else if (hotball === '10%') {
+                    parts.push('10% Hotball Match');
+                } else if (hotball === '20%') {
+                    parts.push('20% Hotball Match');
+                } else {
+                    parts.push('No Hotball Match');
+                }
+                
+                // Pool size
+                if (comparisonPool && comparisonPool.length > 0) {
+                    parts.push(`(${comparisonPool.length} events)`);
+                }
+                
+                comparisonInfoEl.textContent = parts.join(', ');
+            }
+            
+            if (!currentEvent) {
+                console.log('[DEBUG] No current event, clearing boxes');
+                // Clear all boxes if no event
+                ['flash', 'strip', 'other'].forEach(product => {
+                    document.getElementById(`${product}EventPercent`).textContent = '% of Event - 0%';
+                    document.getElementById(`${product}Revenue`).textContent = '$0';
+                    document.getElementById(`${product}Payouts`).textContent = '$0';
+                    document.getElementById(`${product}Net`).textContent = '$0';
+                    document.getElementById(`${product}Margin`).textContent = product === 'other' ? 'N/A' : '0%';
+                    // Clear all comparison values
+                    [`${product}RevenueChange`, `${product}PayoutsChange`, 
+                     `${product}NetChange`, `${product}MarginChange`].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.textContent = '-';
+                            el.style.color = '#64748b';
+                        }
+                    });
+                });
+                return;
+            }
+            
+            // Calculate product metrics for current event
+            const currentMetrics = calculateProductMetrics(currentEvent);
+            console.log('[DEBUG] Current metrics:', currentMetrics);
+            
+            // Calculate comparison metrics from pool
+            let comparisonMetrics = null;
+            if (comparisonPool && comparisonPool.length > 0) {
+                console.log('[DEBUG] Calculating comparison metrics from', comparisonPool.length, 'events');
+                comparisonMetrics = calculateAverageProductMetrics(comparisonPool);
+                console.log('[DEBUG] Comparison metrics:', comparisonMetrics);
+            } else {
+                console.log('[DEBUG] No comparison pool available');
+            }
+            
+            // Calculate total event revenue for percentage calculations
+            const totalEventRevenue = currentMetrics.flash.revenue + currentMetrics.strip.revenue + currentMetrics.other.revenue;
+            
+            // Update each product box
+            ['flash', 'strip', 'other'].forEach(product => {
+                const revenue = currentMetrics[product].revenue;
+                const cost = currentMetrics[product].cost;
+                const netRevenue = revenue - cost;
+                const margin = currentMetrics[product].margin;
+                
+                // Calculate percentage of total event revenue
+                const percentOfEvent = totalEventRevenue > 0 ? (revenue / totalEventRevenue * 100) : 0;
+                
+                // Update percentage of event
+                const percentEl = document.getElementById(`${product}EventPercent`);
+                if (percentEl) {
+                    percentEl.textContent = `% of Event - ${percentOfEvent.toFixed(0)}%`;
+                }
+                
+                // Update revenue
+                document.getElementById(`${product}Revenue`).textContent = 
+                    revenue > 0 ? `$${Math.round(revenue).toLocaleString()}` : '$0';
+                
+                // Update payouts
+                document.getElementById(`${product}Payouts`).textContent = 
+                    cost > 0 ? `$${Math.round(cost).toLocaleString()}` : '$0';
+                
+                // Update net revenue
+                document.getElementById(`${product}Net`).textContent = 
+                    netRevenue !== 0 ? `$${Math.round(netRevenue).toLocaleString()}` : '$0';
+                
+                // Update margin
+                if (product === 'other') {
+                    // For Other, show margin but N/A if negative or over 50%
+                    if (margin < 0 || margin > 50) {
+                        document.getElementById(`${product}Margin`).textContent = 'N/A';
+                    } else {
+                        document.getElementById(`${product}Margin`).textContent = `${margin.toFixed(1)}%`;
+                    }
+                } else {
+                    document.getElementById(`${product}Margin`).textContent = 
+                        margin > 0 ? `${margin.toFixed(1)}%` : '0%';
+                }
+                
+                // Update individual comparison values
+                if (comparisonMetrics && comparisonMetrics[product]) {
+                    // Calculate all changes
+                    const compRevenue = comparisonMetrics[product].revenue;
+                    const compCost = comparisonMetrics[product].cost;
+                    const compNet = compRevenue - compCost;
+                    const compMargin = comparisonMetrics[product].margin;
+                    
+                    // Calculate percentage of total for comparison
+                    const compTotalRevenue = (comparisonMetrics.flash?.revenue || 0) + 
+                                           (comparisonMetrics.strip?.revenue || 0) + 
+                                           (comparisonMetrics.other?.revenue || 0);
+                    const compPercentOfEvent = compTotalRevenue > 0 ? (compRevenue / compTotalRevenue * 100) : 0;
+                    
+                    // Revenue change
+                    const revenueChangeEl = document.getElementById(`${product}RevenueChange`);
+                    if (revenueChangeEl && compRevenue > 0) {
+                        const revenueChange = ((revenue - compRevenue) / compRevenue) * 100;
+                        const arrow = revenueChange > 0 ? '↑' : revenueChange < 0 ? '↓' : '';
+                        revenueChangeEl.textContent = `${arrow}${Math.abs(revenueChange).toFixed(1)}%`;
+                        revenueChangeEl.style.color = revenueChange > 0 ? '#10b981' : revenueChange < 0 ? '#ef4444' : '#64748b';
+                    } else if (revenueChangeEl) {
+                        revenueChangeEl.textContent = '-';
+                        revenueChangeEl.style.color = '#64748b';
+                    }
+                    
+                    // Payouts change
+                    const payoutsChangeEl = document.getElementById(`${product}PayoutsChange`);
+                    if (payoutsChangeEl && compCost > 0) {
+                        const payoutsChange = ((cost - compCost) / compCost) * 100;
+                        const arrow = payoutsChange > 0 ? '↑' : payoutsChange < 0 ? '↓' : '';
+                        payoutsChangeEl.textContent = `${arrow}${Math.abs(payoutsChange).toFixed(1)}%`;
+                        // For payouts, use neutral black color since it's neither good nor bad
+                        payoutsChangeEl.style.color = '#1e293b';
+                    } else if (payoutsChangeEl) {
+                        payoutsChangeEl.textContent = '-';
+                        payoutsChangeEl.style.color = '#64748b';
+                    }
+                    
+                    // Net Revenue change
+                    const netChangeEl = document.getElementById(`${product}NetChange`);
+                    if (netChangeEl && compNet !== 0) {
+                        const netChange = ((netRevenue - compNet) / Math.abs(compNet)) * 100;
+                        const arrow = netChange > 0 ? '↑' : netChange < 0 ? '↓' : '';
+                        netChangeEl.textContent = `${arrow}${Math.abs(netChange).toFixed(1)}%`;
+                        netChangeEl.style.color = netChange > 0 ? '#10b981' : netChange < 0 ? '#ef4444' : '#64748b';
+                    } else if (netChangeEl) {
+                        netChangeEl.textContent = '-';
+                        netChangeEl.style.color = '#64748b';
+                    }
+                    
+                    // Margin change (pp and %)
+                    const marginChangeEl = document.getElementById(`${product}MarginChange`);
+                    if (marginChangeEl) {
+                        if (product === 'other' && (margin < 0 || margin > 50 || compMargin < 0 || compMargin > 50)) {
+                            // If Other margin is invalid, don't show comparison
+                            marginChangeEl.textContent = '-';
+                            marginChangeEl.style.color = '#64748b';
+                        } else {
+                            const marginPPChange = margin - compMargin;
+                            const marginPercChange = compMargin > 0 ? ((margin - compMargin) / compMargin) * 100 : 0;
+                            const arrow = marginPPChange > 0 ? '↑' : marginPPChange < 0 ? '↓' : '';
+                            // Show both pp and % change for margin
+                            marginChangeEl.textContent = `${arrow}${Math.abs(marginPPChange).toFixed(1)}pp`;
+                            marginChangeEl.style.color = marginPPChange > 0 ? '#10b981' : marginPPChange < 0 ? '#ef4444' : '#64748b';
+                        }
+                    }
+                } else {
+                    // No comparison data - set all to dash
+                    [`${product}RevenueChange`, `${product}PayoutsChange`, 
+                     `${product}NetChange`, `${product}MarginChange`].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.textContent = '-';
+                            el.style.color = '#64748b';
+                        }
+                    });
+                }
+                
+                // Update expansion details
+                updateProductExpansion(product, currentEvent, currentMetrics[product], 
+                                      comparisonPool, comparisonMetrics ? comparisonMetrics[product] : null,
+                                      comparisonMetrics);
+            });
+        }
+        
+        function calculateProductMetrics(event) {
+            const metrics = {
+                flash: { revenue: 0, cost: 0, margin: 0, count: 0 },
+                strip: { revenue: 0, cost: 0, margin: 0, count: 0 },
+                other: { revenue: 0, cost: 0, margin: 0, count: 0 }
+            };
+            
+            if (!event) return metrics;
+            
+            // Flash products
+            // Revenue: Row 6 (Flash)
+            metrics.flash.revenue = parseFloat(event.getRowValue ? event.getRowValue(6) : event.flash) || 0;
+            // Payouts: Row 18 (Flash Payouts) + Row 27 (Flash Redeemed)
+            metrics.flash.cost = (parseFloat(event.getRowValue ? event.getRowValue(18) : 0) || 0) + 
+                                (parseFloat(event.getRowValue ? event.getRowValue(27) : 0) || 0);
+            
+            // Strip products
+            // Revenue: Row 9 (Strips)
+            metrics.strip.revenue = parseFloat(event.getRowValue ? event.getRowValue(9) : event.strips) || 0;
+            // Payouts: Row 16 (Strip Payouts) + Row 19 (All Numbers) + Row 20 (Double Action) + Row 21 (Winnemucca) + Row 22 (RWB)
+            metrics.strip.cost = (parseFloat(event.getRowValue ? event.getRowValue(16) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(19) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(20) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(21) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(22) : 0) || 0);
+            
+            // Other products
+            // Revenue: Row 7 (Cherries) + Row 8 (Paper) + Row 10 (Merch)
+            metrics.other.revenue = (parseFloat(event.getRowValue ? event.getRowValue(7) : event.cherries) || 0) +
+                                   (parseFloat(event.getRowValue ? event.getRowValue(8) : event.paper) || 0) +
+                                   (parseFloat(event.getRowValue ? event.getRowValue(10) : 0) || 0);
+            // Payouts: Row 17 (Paper Game Payouts) + Row 23 (Cherry Redeemed) + Row 24 (Cherry from Winn) + Row 25 (Gift Cert) + Row 26 (Refund/Other)
+            metrics.other.cost = (parseFloat(event.getRowValue ? event.getRowValue(17) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(23) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(24) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(25) : 0) || 0) +
+                                (parseFloat(event.getRowValue ? event.getRowValue(26) : 0) || 0);
+            
+            // Calculate margins
+            ['flash', 'strip', 'other'].forEach(product => {
+                if (metrics[product].revenue > 0) {
+                    metrics[product].margin = ((metrics[product].revenue - metrics[product].cost) / metrics[product].revenue) * 100;
+                }
+            });
+            
+            return metrics;
+        }
+        
+        function calculateAverageProductMetrics(events) {
+            if (!events || events.length === 0) return null;
+            
+            const totals = {
+                flash: { revenue: 0, cost: 0, margin: 0, count: 0 },
+                strip: { revenue: 0, cost: 0, margin: 0, count: 0 },
+                other: { revenue: 0, cost: 0, margin: 0, count: 0 }
+            };
+            
+            events.forEach(event => {
+                const metrics = calculateProductMetrics(event);
+                ['flash', 'strip', 'other'].forEach(product => {
+                    totals[product].revenue += metrics[product].revenue;
+                    totals[product].cost += metrics[product].cost;
+                    if (metrics[product].revenue > 0) {
+                        totals[product].count++;
+                    }
+                });
+            });
+            
+            // Calculate averages and margins
+            ['flash', 'strip', 'other'].forEach(product => {
+                if (totals[product].count > 0) {
+                    totals[product].revenue = totals[product].revenue / events.length;
+                    totals[product].cost = totals[product].cost / events.length;
+                    if (totals[product].revenue > 0) {
+                        totals[product].margin = ((totals[product].revenue - totals[product].cost) / totals[product].revenue) * 100;
+                    }
+                }
+            });
+            
+            return totals;
+        }
+        
+        function updateProductExpansion(product, currentEvent, currentMetrics, comparisonPool, comparisonMetrics, allComparisonMetrics) {
+            const comparisonDetailsEl = document.getElementById(`${product}ComparisonDetails`);
+            
+            if (!comparisonDetailsEl) {
+                console.log(`[DEBUG] No comparison details element found for ${product}`);
+                return;
+            }
+            
+            // Update comparison pool details only
+            if (comparisonPool && comparisonPool.length > 0 && comparisonMetrics) {
+                const avgNet = Math.round(comparisonMetrics.revenue - comparisonMetrics.cost);
+                
+                // Calculate percentage of total revenue for this product
+                let percentOfRevenue = 0;
+                if (allComparisonMetrics) {
+                    const totalRevenue = (allComparisonMetrics.flash?.revenue || 0) + 
+                                       (allComparisonMetrics.strip?.revenue || 0) + 
+                                       (allComparisonMetrics.other?.revenue || 0);
+                    if (totalRevenue > 0) {
+                        percentOfRevenue = (comparisonMetrics.revenue / totalRevenue) * 100;
+                    }
+                }
+                
+                // Get proper product display name
+                const productName = product.charAt(0).toUpperCase() + product.slice(1);
+                
+                console.log(`[DEBUG] Updating ${product} expansion with ${comparisonPool.length} events`);
+                comparisonDetailsEl.innerHTML = `
+                    <div style="margin-bottom: 4px;">Pool Size: ${comparisonPool.length} events</div>
+                    <div style="margin-bottom: 4px;">${productName} % of Revenue: ${percentOfRevenue.toFixed(1)}%</div>
+                    <div style="margin-bottom: 4px;">Avg Revenue: $${Math.round(comparisonMetrics.revenue).toLocaleString()}</div>
+                    <div style="margin-bottom: 4px;">Avg Payouts: $${Math.round(comparisonMetrics.cost).toLocaleString()}</div>
+                    <div style="margin-bottom: 4px;">Avg Net Revenue: $${avgNet.toLocaleString()}</div>
+                    <div>Avg Margin: ${product === 'other' && (comparisonMetrics.margin < 0 || comparisonMetrics.margin > 50) ? 'N/A' : comparisonMetrics.margin.toFixed(1) + '%'}</div>
+                `;
+            } else {
+                console.log(`[DEBUG] No comparison data for ${product} expansion`);
+                comparisonDetailsEl.innerHTML = '<div style="color: #999;">No comparison data available - select comparison filters above</div>';
+            }
+        }
+        
+        // Initialize product box click handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[DEBUG] Initializing product box click handlers');
+            
+            // Wait a bit for the product boxes to be rendered
+            setTimeout(() => {
+                const boxes = document.querySelectorAll('.product-box');
+                console.log('[DEBUG] Found', boxes.length, 'product boxes');
+                
+                boxes.forEach(box => {
+                    box.addEventListener('click', function(e) {
+                        console.log('[DEBUG] Product box clicked:', this.dataset.product);
+                        
+                        // Don't toggle if clicking on a link or button inside
+                        if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+                        
+                        // Get all expansions
+                        const allExpansions = document.querySelectorAll('.product-expansion');
+                        const allBoxes = document.querySelectorAll('.product-box');
+                        
+                        // Check if any expansion is currently open
+                        const isAnyExpanded = Array.from(allExpansions).some(exp => exp.style.display === 'block');
+                        console.log('[DEBUG] Current expansion state:', isAnyExpanded ? 'expanded' : 'collapsed');
+                        
+                        if (isAnyExpanded) {
+                            // Close all expansions
+                            allExpansions.forEach(exp => {
+                                exp.style.display = 'none';
+                            });
+                            // Remove expanded class from all boxes
+                            allBoxes.forEach(b => {
+                                b.classList.remove('expanded');
+                            });
+                            console.log('[DEBUG] All boxes collapsed');
+                        } else {
+                            // Open all expansions
+                            allExpansions.forEach(exp => {
+                                exp.style.display = 'block';
+                            });
+                            // Add expanded class to all boxes
+                            allBoxes.forEach(b => {
+                                b.classList.add('expanded');
+                            });
+                            console.log('[DEBUG] All boxes expanded');
+                            
+                            // Scroll to show the expanded content
+                            setTimeout(() => {
+                                const firstBox = document.querySelector('.product-box');
+                                if (firstBox) {
+                                    const rect = firstBox.getBoundingClientRect();
+                                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                                    const targetScroll = scrollTop + rect.top - 100; // 100px offset from top
+                                    window.scrollTo({ 
+                                        top: targetScroll, 
+                                        behavior: 'smooth' 
+                                    });
+                                }
+                            }, 100); // Small delay to ensure expansion animation starts
+                        }
+                    });
+                });
+            }, 500); // Wait 500ms for product boxes to be rendered
+        });
+
+        // Global chart location filter
+        let chartLocationFilter = 'combined'; // 'combined', 'SC', 'RWC'
+        
+        // Update chart location filter
+        function updateChartLocation(location) {
+            chartLocationFilter = location;
+            
+            // Update button styles
+            const buttons = {
+                'combined': document.getElementById('chart-loc-combined'),
+                'SC': document.getElementById('chart-loc-sc'),
+                'RWC': document.getElementById('chart-loc-rwc')
+            };
+            
+            Object.keys(buttons).forEach(key => {
+                if (buttons[key]) {
+                    if (key === location) {
+                        buttons[key].style.background = '#3b82f6';
+                        buttons[key].style.color = 'white';
+                    } else {
+                        buttons[key].style.background = 'transparent';
+                        buttons[key].style.color = '#64748b';
+                    }
+                }
+            });
+            
+            // Redraw the chart with new filter
+            const chartType = document.getElementById('chartTypeSelector')?.value || 'ytd';
+            updateChartDisplay(chartType);
+        }
+        
         // Debug function to inspect Monthly data structure
         window.inspectMonthlyData = function() {
             const scMonthly = window.VanguardData?.data?.scMonthly;
@@ -4552,7 +5394,7 @@
             const monthlyData = [];
             
             // Process SC Monthly data - data is stored in each column's data object
-            if (scMonthly && scMonthly.columns) {
+            if (chartLocationFilter !== 'RWC' && scMonthly && scMonthly.columns) {
                 console.log('Processing SC Monthly columns:', scMonthly.columns.length);
                 console.log('First SC column:', scMonthly.columns[0]);
                 
@@ -4583,7 +5425,7 @@
             }
             
             // Process RWC Monthly data and combine with same months
-            if (rwcMonthly && rwcMonthly.columns) {
+            if (chartLocationFilter !== 'SC' && rwcMonthly && rwcMonthly.columns) {
                 console.log('Processing RWC Monthly columns:', rwcMonthly.columns.length);
                 console.log('First RWC column:', rwcMonthly.columns[0]);
                 
@@ -4601,12 +5443,13 @@
                             });
                         }
                         
-                        // Find if this month already exists from SC
-                        const existing = monthlyData.find(d => d.month === col.header);
+                        // Find if this month already exists from SC (only combine in 'combined' mode)
+                        const existing = chartLocationFilter === 'combined' ? monthlyData.find(d => d.month === col.header) : null;
                         if (existing) {
-                            // Combine the values
+                            // Combine the values (only in combined mode)
                             existing.totalSales += parseFloat(totalSales) || 0;
                             existing.netSales += parseFloat(netSales) || 0;
+                            existing.location = 'Combined';
                         } else {
                             // Add as new month
                             monthlyData.push({
@@ -5072,9 +5915,14 @@
             const grossValues = [];
             const netValues = [];
             
-            // Get SC Monthly columns - filter for current year only
-            if (window.VanguardData.data.scMonthly?.columns) {
-                window.VanguardData.data.scMonthly.columns.forEach(col => {
+            // Process monthly data based on location filter
+            const scMonthly = window.VanguardData.data.scMonthly;
+            const rwcMonthly = window.VanguardData.data.rwcMonthly;
+            const monthData = {};
+            
+            // Get SC Monthly columns if needed
+            if (chartLocationFilter !== 'RWC' && scMonthly?.columns) {
+                scMonthly.columns.forEach(col => {
                     if (col.header && col.data) {
                         // Skip Total and Average columns
                         const headerLower = col.header.toLowerCase();
@@ -5088,13 +5936,60 @@
                             const gross = col.data?.row12?.value || 0;
                             const net = col.data?.row31?.value || 0;
                             
-                            months.push(col.header);
-                            grossValues.push(parseFloat(gross));
-                            netValues.push(parseFloat(net));
+                            if (!monthData[col.header]) {
+                                monthData[col.header] = { gross: 0, net: 0 };
+                            }
+                            monthData[col.header].gross += parseFloat(gross) || 0;
+                            monthData[col.header].net += parseFloat(net) || 0;
                         }
                     }
                 });
             }
+            
+            // Get RWC Monthly columns if needed
+            if (chartLocationFilter !== 'SC' && rwcMonthly?.columns) {
+                rwcMonthly.columns.forEach(col => {
+                    if (col.header && col.data) {
+                        // Skip Total and Average columns
+                        const headerLower = col.header.toLowerCase();
+                        if (headerLower.includes('total') || headerLower.includes('average')) {
+                            return;
+                        }
+                        
+                        // Check if this is current year (YTD)
+                        if (col.header.includes('-25') || col.header.includes('2025')) {
+                            const gross = col.data?.row12?.value || 0;
+                            const net = col.data?.row31?.value || 0;
+                            
+                            if (!monthData[col.header]) {
+                                monthData[col.header] = { gross: 0, net: 0 };
+                            }
+                            
+                            if (chartLocationFilter === 'combined') {
+                                // Add to existing SC data
+                                monthData[col.header].gross += parseFloat(gross) || 0;
+                                monthData[col.header].net += parseFloat(net) || 0;
+                            } else {
+                                // Replace with RWC data
+                                monthData[col.header].gross = parseFloat(gross) || 0;
+                                monthData[col.header].net = parseFloat(net) || 0;
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Convert monthData to arrays
+            const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            Object.keys(monthData).sort((a, b) => {
+                const aMonth = a.split('-')[0];
+                const bMonth = b.split('-')[0];
+                return monthOrder.indexOf(aMonth) - monthOrder.indexOf(bMonth);
+            }).forEach(month => {
+                months.push(month);
+                grossValues.push(monthData[month].gross);
+                netValues.push(monthData[month].net);
+            });
             
             if (months.length === 0) {
                 container.innerHTML = '<div style="padding: 20px;">No YTD data to display</div>';
@@ -5921,7 +6816,22 @@
                 attendance: getPercentChange(metrics.attendance, prevQuarter.metrics.attendance),
                 margin: metrics.margin - prevQuarter.metrics.margin,
                 rpa: getPercentChange(metrics.rpa, prevQuarter.metrics.rpa),
-                profitPerEvent: getPercentChange(metrics.netSales / metrics.eventCount, prevQuarter.metrics.netSales / prevQuarter.metrics.eventCount)
+                profitPerEvent: getPercentChange(metrics.netSales / metrics.eventCount, prevQuarter.metrics.netSales / prevQuarter.metrics.eventCount),
+                // Product changes
+                flashPercent: (metrics.flash/metrics.totalSales*100) - (prevQuarter.metrics.flash/prevQuarter.metrics.totalSales*100),
+                stripPercent: (metrics.strips/metrics.totalSales*100) - (prevQuarter.metrics.strips/prevQuarter.metrics.totalSales*100),
+                flashSales: getPercentChange(metrics.flash, prevQuarter.metrics.flash),
+                stripSales: getPercentChange(metrics.strips, prevQuarter.metrics.strips),
+                flashPayouts: getPercentChange(metrics.flashPayouts, prevQuarter.metrics.flashPayouts),
+                stripPayouts: getPercentChange(metrics.stripPayouts, prevQuarter.metrics.stripPayouts),
+                flashNet: getPercentChange((metrics.flash - metrics.flashPayouts), (prevQuarter.metrics.flash - prevQuarter.metrics.flashPayouts)),
+                stripNet: getPercentChange((metrics.strips - metrics.stripPayouts), (prevQuarter.metrics.strips - prevQuarter.metrics.stripPayouts)),
+                flashMargin: (metrics.flash > 0 ? ((metrics.flash - metrics.flashPayouts)/metrics.flash*100) : 0) - 
+                             (prevQuarter.metrics.flash > 0 ? ((prevQuarter.metrics.flash - prevQuarter.metrics.flashPayouts)/prevQuarter.metrics.flash*100) : 0),
+                stripMargin: (metrics.strips > 0 ? ((metrics.strips - metrics.stripPayouts)/metrics.strips*100) : 0) - 
+                             (prevQuarter.metrics.strips > 0 ? ((prevQuarter.metrics.strips - prevQuarter.metrics.stripPayouts)/prevQuarter.metrics.strips*100) : 0),
+                flashRPA: getPercentChange((metrics.flash/metrics.attendance), (prevQuarter.metrics.flash/prevQuarter.metrics.attendance)),
+                stripRPA: getPercentChange((metrics.strips/metrics.attendance), (prevQuarter.metrics.strips/prevQuarter.metrics.attendance))
             } : {};
             
             const formatChange = (change, isMargin = false) => {
@@ -5991,17 +6901,103 @@
                         </div>
                     </div>
                     
-                    <!-- Attendance Box -->
-                    <div onclick="toggleReportingSection('${quarterData.key}', 'attendance', this)" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #faf5ff, #f3e8ff); position: relative;">
-                        <div style="font-size: 11px; color: #581c87; text-transform: uppercase; font-weight: 600;">Attendance</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #8b5cf6;">${metrics.attendancePercent.toFixed(1)}%</div>
-                        ${changes.attendance !== undefined ? `<div style="position: absolute; top: 12px; right: 12px;">${formatChange(changes.attendance)}</div>` : ''}
-                        <div class="expansion-${quarterData.key}-attendance" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #d8b4fe;">
-                            <div style="display: grid; gap: 4px;">
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Total Attendance:</span> ${metrics.attendance.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Total Capacity:</span> ${metrics.totalCapacity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Total Events:</span> ${metrics.eventCount}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Avg/Event:</span> ${(metrics.attendance / metrics.eventCount).toFixed(0)}</div>
+                    <!-- Products Box - Purple background -->
+                    <div onclick="toggleReportingSection('${quarterData.key}', 'products', this)" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #faf5ff, #f3e8ff); position: relative;">
+                        <div style="font-size: 11px; color: #581c87; text-transform: uppercase; font-weight: 600;">Products</div>
+                        <div style="font-size: 12px; font-weight: 600; color: #8b5cf6; line-height: 1.3;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Flash: ${((metrics.flash || 0)/metrics.totalSales*100).toFixed(1)}%</span>
+                                ${changes.flashPercent !== undefined ? `<span style="font-size: 10px; color: ${changes.flashPercent > 0 ? '#16a34a' : changes.flashPercent < 0 ? '#dc2626' : '#6b7280'}; font-weight: 600;">${changes.flashPercent > 0 ? '↑' : changes.flashPercent < 0 ? '↓' : '→'} ${Math.abs(changes.flashPercent).toFixed(1)}pp</span>` : ''}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Strip: ${((metrics.strips || 0)/metrics.totalSales*100).toFixed(1)}%</span>
+                                ${changes.stripPercent !== undefined ? `<span style="font-size: 10px; color: ${changes.stripPercent > 0 ? '#16a34a' : changes.stripPercent < 0 ? '#dc2626' : '#6b7280'}; font-weight: 600;">${changes.stripPercent > 0 ? '↑' : changes.stripPercent < 0 ? '↓' : '→'} ${Math.abs(changes.stripPercent).toFixed(1)}pp</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="expansion-${quarterData.key}-products" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #d8b4fe;">
+                            <div style="display: grid; gap: 6px;">
+                                <!-- Flash Details -->
+                                <div style="background: rgba(139, 92, 246, 0.05); padding: 8px; border-radius: 4px;">
+                                    <div style="font-size: 11px; font-weight: 600; color: #581c87; margin-bottom: 4px;">Flash</div>
+                                    <div style="font-size: 10px; color: #581c87; display: grid; gap: 2px;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Sales:</span>
+                                            <span>
+                                                $${(metrics.flash || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                ${changes.flashSales !== undefined ? `<span style="color: ${changes.flashSales > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.flashSales > 0 ? '↑' : '↓'}${Math.abs(changes.flashSales).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Payouts:</span>
+                                            <span>
+                                                $${(metrics.flashPayouts || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                ${changes.flashPayouts !== undefined ? `<span style="color: ${changes.flashPayouts > 0 ? '#dc2626' : '#16a34a'}; margin-left: 4px; font-size: 9px;">${changes.flashPayouts > 0 ? '↑' : '↓'}${Math.abs(changes.flashPayouts).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Net:</span>
+                                            <span>
+                                                $${((metrics.flash || 0) - (metrics.flashPayouts || 0)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                ${changes.flashNet !== undefined ? `<span style="color: ${changes.flashNet > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.flashNet > 0 ? '↑' : '↓'}${Math.abs(changes.flashNet).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Margin:</span>
+                                            <span>
+                                                ${metrics.flash > 0 ? (((metrics.flash - (metrics.flashPayouts || 0))/metrics.flash)*100).toFixed(1) : 0}%
+                                                ${changes.flashMargin !== undefined ? `<span style="color: ${changes.flashMargin > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.flashMargin > 0 ? '↑' : '↓'}${Math.abs(changes.flashMargin).toFixed(1)}pp</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>RPA:</span>
+                                            <span>
+                                                $${metrics.attendance > 0 ? ((metrics.flash || 0)/metrics.attendance).toFixed(2) : '0.00'}
+                                                ${changes.flashRPA !== undefined ? `<span style="color: ${changes.flashRPA > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.flashRPA > 0 ? '↑' : '↓'}${Math.abs(changes.flashRPA).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Strip Details -->
+                                <div style="background: rgba(139, 92, 246, 0.05); padding: 8px; border-radius: 4px;">
+                                    <div style="font-size: 11px; font-weight: 600; color: #581c87; margin-bottom: 4px;">Strip</div>
+                                    <div style="font-size: 10px; color: #581c87; display: grid; gap: 2px;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Sales:</span>
+                                            <span>
+                                                $${(metrics.strips || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                ${changes.stripSales !== undefined ? `<span style="color: ${changes.stripSales > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.stripSales > 0 ? '↑' : '↓'}${Math.abs(changes.stripSales).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Payouts:</span>
+                                            <span>
+                                                $${(metrics.stripPayouts || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                ${changes.stripPayouts !== undefined ? `<span style="color: ${changes.stripPayouts > 0 ? '#dc2626' : '#16a34a'}; margin-left: 4px; font-size: 9px;">${changes.stripPayouts > 0 ? '↑' : '↓'}${Math.abs(changes.stripPayouts).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Net:</span>
+                                            <span>
+                                                $${((metrics.strips || 0) - (metrics.stripPayouts || 0)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                ${changes.stripNet !== undefined ? `<span style="color: ${changes.stripNet > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.stripNet > 0 ? '↑' : '↓'}${Math.abs(changes.stripNet).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>Margin:</span>
+                                            <span>
+                                                ${metrics.strips > 0 ? (((metrics.strips - (metrics.stripPayouts || 0))/metrics.strips)*100).toFixed(1) : 0}%
+                                                ${changes.stripMargin !== undefined ? `<span style="color: ${changes.stripMargin > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.stripMargin > 0 ? '↑' : '↓'}${Math.abs(changes.stripMargin).toFixed(1)}pp</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>RPA:</span>
+                                            <span>
+                                                $${metrics.attendance > 0 ? ((metrics.strips || 0)/metrics.attendance).toFixed(2) : '0.00'}
+                                                ${changes.stripRPA !== undefined ? `<span style="color: ${changes.stripRPA > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px; font-size: 9px;">${changes.stripRPA > 0 ? '↑' : '↓'}${Math.abs(changes.stripRPA).toFixed(0)}%</span>` : ''}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -6042,7 +7038,7 @@
                     </div>
                     
                     <!-- Profit/Event Box -->
-                    <div onclick="toggleReportingSection('${quarterData.key}', 'profit-event', this)" style="padding: 12px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #eef2ff, #e0e7ff); position: relative;">
+                    <div onclick="toggleReportingSection('${quarterData.key}', 'profit-event', this)" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #eef2ff, #e0e7ff); position: relative;">
                         <div style="font-size: 11px; color: #312e81; text-transform: uppercase; font-weight: 600;">Profit/Event</div>
                         <div style="font-size: 18px; font-weight: 700; color: #6366f1;">$${(metrics.netSales / metrics.eventCount).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
                         ${changes.profitPerEvent !== undefined ? `<div style="position: absolute; top: 12px; right: 12px;">${formatChange(changes.profitPerEvent)}</div>` : ''}
@@ -6055,6 +7051,21 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Attendance Box - Teal background (moved to bottom) -->
+                    <div onclick="toggleReportingSection('${quarterData.key}', 'attendance', this)" style="padding: 12px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); position: relative;">
+                        <div style="font-size: 11px; color: #134e4a; text-transform: uppercase; font-weight: 600;">Attendance</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #14b8a6;">${metrics.attendancePercent.toFixed(1)}%</div>
+                        ${changes.attendance !== undefined ? `<div style="position: absolute; top: 12px; right: 12px;">${formatChange(changes.attendance)}</div>` : ''}
+                        <div class="expansion-${quarterData.key}-attendance" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #5eead4;">
+                            <div style="display: grid; gap: 4px;">
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Total Attendance:</span> ${metrics.attendance.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Total Capacity:</span> ${metrics.totalCapacity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Total Events:</span> ${metrics.eventCount}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Avg/Event:</span> ${(metrics.attendance / metrics.eventCount).toFixed(0)}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
             
@@ -6062,81 +7073,109 @@
         }
         
         function createQuarterProjection(lastQuarter) {
-            // Calculate % of quarter passed based on current date
+            // Check if we need projection for this quarter
             if (!lastQuarter.events || lastQuarter.events.length === 0) return null;
             
-            // Get the latest event date to determine how much of quarter has passed
-            const parseDate = (dateStr) => {
-                const cleanStr = (dateStr || '').toString().replace(/\s+(Late|PM)/gi, '').trim();
-                if (cleanStr.includes('/')) {
-                    const [month, day, year] = cleanStr.split('/').map(Number);
-                    return new Date(year, month - 1, day);
-                }
-                return new Date(cleanStr);
-            };
-            
-            const eventDates = lastQuarter.events.map(e => {
-                const dateStr = e.dateValue || e.date;
-                return parseDate(dateStr);
-            }).filter(d => d && !isNaN(d.getTime()));
-            
-            if (eventDates.length === 0) return null;
-            
-            // Use today's date for calculating progress, not last event date
-            const today = new Date();
-            // Fix: quarters are 1-4, so Q1 starts at month 0 (Jan), Q2 at month 3 (Apr), etc.
+            // Calculate quarter date range
             const quarterStartMonth = (lastQuarter.quarter - 1) * 3;
             const quarterStart = new Date(lastQuarter.year, quarterStartMonth, 1);
             const quarterEnd = new Date(lastQuarter.year, quarterStartMonth + 3, 0);
             
-            const totalDaysInQuarter = Math.floor((quarterEnd - quarterStart) / (1000 * 60 * 60 * 24)) + 1;
-            // Use today's date if we're in the current quarter, otherwise use quarter end
-            const effectiveDate = today <= quarterEnd ? today : quarterEnd;
-            const daysPassed = Math.floor((effectiveDate - quarterStart) / (1000 * 60 * 60 * 24)) + 1;
-            const percentPassed = (daysPassed / totalDaysInQuarter) * 100;
+            // Get missing events for the quarter
+            const missingEvents = getMissingEventsForPeriod(quarterStart, quarterEnd, lastQuarter.events, reportingLocationFilter);
             
-            // If quarter is more than 85% complete, don't show projection
-            if (percentPassed >= 85) return null;
+            // If no missing events, no projection needed
+            if (missingEvents.length === 0) return null;
             
-            const metrics = lastQuarter.metrics;
-            const projectionFactor = totalDaysInQuarter / daysPassed;
+            // Calculate projection totals
+            const projectionTotals = {
+                totalSales: 0,
+                totalPayouts: 0,
+                netSales: 0
+            };
             
+            missingEvents.forEach(event => {
+                projectionTotals.totalSales += event.totalSales;
+                projectionTotals.totalPayouts += event.totalPayouts;
+                projectionTotals.netSales += event.netSales;
+            });
+            
+            // Add existing actuals
+            const actualMetrics = lastQuarter.metrics;
             const projectedMetrics = {
-                totalSales: metrics.totalSales * projectionFactor,
-                netSales: metrics.netSales * projectionFactor,
-                attendance: metrics.attendance * projectionFactor,
-                totalPayouts: metrics.totalPayouts * projectionFactor,
-                margin: metrics.margin, // Stays the same
-                rpa: metrics.rpa // Stays the same
+                totalSales: actualMetrics.totalSales + projectionTotals.totalSales,
+                totalPayouts: actualMetrics.totalPayouts + projectionTotals.totalPayouts,
+                netSales: actualMetrics.netSales + projectionTotals.netSales,
+                margin: ((actualMetrics.totalSales + projectionTotals.totalSales - actualMetrics.totalPayouts - projectionTotals.totalPayouts) / 
+                        (actualMetrics.totalSales + projectionTotals.totalSales)) * 100
             };
             
             const projDiv = document.createElement('div');
             projDiv.style.cssText = 'width: 200px; flex-shrink: 0;';
             
             projDiv.innerHTML = `
-                <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
-                    <div style="background: #f8fafc; padding: 10px; border-bottom: 1px solid #e5e7eb;">
-                        <div style="font-size: 14px; font-weight: 600; color: #1e293b;">% of Quarter</div>
-                        <div style="font-size: 11px; color: #64748b;">${percentPassed.toFixed(1)}% Complete</div>
-                        <div style="font-size: 10px; color: #64748b;">${daysPassed} of ${totalDaysInQuarter} days</div>
+                <div style="background: white; border: 2px dashed #10b981; border-radius: 8px; overflow: visible;">
+                    <!-- Projection Header -->
+                    <div style="background: white; padding: 10px; border-bottom: 1px solid #e5e7eb; position: relative;">
+                        <div style="font-size: 14px; font-weight: 600; color: #374151;">Quarter Projection</div>
+                        <div style="font-size: 11px; color: #6b7280;">${lastQuarter.events.length} Actual + ${missingEvents.length} Projected</div>
+                        ${TooltipHelpers.createInfoIcon(`QUARTERLY PROJECTION ASSUMPTIONS:
+
+SC Events Expected:
+• 2 Saturday events per week (Early & Late)
+• 2 Sunday events per week (Early & Late)
+• Monday events
+• Friday events
+
+RWC Events Expected:
+• Tuesday events
+• Wednesday events 
+• Thursday events
+
+Averages based on all similar events from June forward.
+Hover over individual metrics for detailed averages.`)}
                     </div>
                     
-                    <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #eff6ff, #dbeafe);">
-                        <div style="font-size: 11px; color: #1e40af; text-transform: uppercase; font-weight: 600;">Sales Projection</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #2563eb;">$${projectedMetrics.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                        <div style="font-size: 10px; color: #1e40af; margin-top: 4px;">Current: $${metrics.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                    <!-- Projected Total Sales -->
+                    <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                        <div style="font-size: 11px; color: #1e40af; text-transform: uppercase; font-weight: 600;">Projected Total Sales</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #1e40af;">$${projectedMetrics.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                        <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                            Actual: $${actualMetrics.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280;">
+                            Added: $${projectionTotals.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
                     </div>
                     
-                    <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #fef2f2, #fee2e2);">
-                        <div style="font-size: 11px; color: #991b1b; text-transform: uppercase; font-weight: 600;">Payouts Projection</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #dc2626;">$${projectedMetrics.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                        <div style="font-size: 10px; color: #991b1b; margin-top: 4px;">Current: $${metrics.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                    <!-- Projected Payouts -->
+                    <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+                        <div style="font-size: 11px; color: #991b1b; text-transform: uppercase; font-weight: 600;">Projected Payouts</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #991b1b;">$${projectedMetrics.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                        <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                            Actual: $${actualMetrics.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280;">
+                            Added: $${projectionTotals.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
                     </div>
                     
-                    <div style="padding: 12px; background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
-                        <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 600;">Net Projection</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #10b981;">$${projectedMetrics.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                        <div style="font-size: 10px; color: #166534; margin-top: 4px;">Current: $${metrics.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                    <!-- Projected Net Sales -->
+                    <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+                        <div style="font-size: 11px; color: #14532d; text-transform: uppercase; font-weight: 600;">Projected Net Sales</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #14532d;">$${projectedMetrics.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                        <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                            Actual: $${actualMetrics.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280;">
+                            Added: $${projectionTotals.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                    </div>
+                    
+                    <!-- Projected Margin -->
+                    <div style="padding: 12px;">
+                        <div style="font-size: 11px; color: #065f46; text-transform: uppercase; font-weight: 600;">Projected Margin</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #059669;">${projectedMetrics.margin.toFixed(1)}%</div>
                     </div>
                 </div>
             `;
@@ -6249,7 +7288,22 @@
                 attendancePercent: metrics.attendancePercent - prevMonth.metrics.attendancePercent, // Already a percentage, so just subtract
                 margin: metrics.margin - prevMonth.metrics.margin, // Margin is already a percentage, so just subtract
                 rpa: getPercentChange(metrics.rpa, prevMonth.metrics.rpa),
-                profitPerEvent: getPercentChange(metrics.netSales / metrics.eventCount, prevMonth.metrics.netSales / prevMonth.metrics.eventCount)
+                profitPerEvent: getPercentChange(metrics.netSales / metrics.eventCount, prevMonth.metrics.netSales / prevMonth.metrics.eventCount),
+                // Product changes
+                flashPercent: (metrics.flash/metrics.totalSales*100) - (prevMonth.metrics.flash/prevMonth.metrics.totalSales*100),
+                stripPercent: (metrics.strips/metrics.totalSales*100) - (prevMonth.metrics.strips/prevMonth.metrics.totalSales*100),
+                flashSales: getPercentChange(metrics.flash, prevMonth.metrics.flash),
+                stripSales: getPercentChange(metrics.strips, prevMonth.metrics.strips),
+                flashPayouts: getPercentChange(metrics.flashPayouts, prevMonth.metrics.flashPayouts),
+                stripPayouts: getPercentChange(metrics.stripPayouts, prevMonth.metrics.stripPayouts),
+                flashNet: getPercentChange((metrics.flash - metrics.flashPayouts), (prevMonth.metrics.flash - prevMonth.metrics.flashPayouts)),
+                stripNet: getPercentChange((metrics.strips - metrics.stripPayouts), (prevMonth.metrics.strips - prevMonth.metrics.stripPayouts)),
+                flashMargin: (metrics.flash > 0 ? ((metrics.flash - metrics.flashPayouts)/metrics.flash*100) : 0) - 
+                             (prevMonth.metrics.flash > 0 ? ((prevMonth.metrics.flash - prevMonth.metrics.flashPayouts)/prevMonth.metrics.flash*100) : 0),
+                stripMargin: (metrics.strips > 0 ? ((metrics.strips - metrics.stripPayouts)/metrics.strips*100) : 0) - 
+                             (prevMonth.metrics.strips > 0 ? ((prevMonth.metrics.strips - prevMonth.metrics.stripPayouts)/prevMonth.metrics.strips*100) : 0),
+                flashRPA: getPercentChange((metrics.flash/metrics.attendance), (prevMonth.metrics.flash/prevMonth.metrics.attendance)),
+                stripRPA: getPercentChange((metrics.strips/metrics.attendance), (prevMonth.metrics.strips/prevMonth.metrics.attendance))
             } : {};
             
             const formatChange = (change, isMargin = false) => {
@@ -6319,20 +7373,102 @@
                         </div>
                     </div>
                     
-                    <!-- Attendance Box - Purple background -->
-                    <div onclick="toggleReportingSection('${monthData.key}', 'attendance', this)" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #faf5ff, #f3e8ff); position: relative;">
-                        <div style="font-size: 11px; color: #581c87; text-transform: uppercase; font-weight: 600;">Attendance</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #8b5cf6;">${metrics.attendancePercent.toFixed(1)}%</div>
-                        ${changes.attendancePercent !== undefined ? `<div style="position: absolute; top: 12px; right: 12px;">${formatChange(changes.attendancePercent, true)}</div>` : ''}
-                        <div class="expansion-${monthData.key}-attendance" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #d8b4fe;">
-                            <div style="display: grid; gap: 4px;">
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Total Attendance:</span> ${metrics.attendance.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Total Capacity:</span> ${metrics.totalCapacity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Total Events:</span> ${metrics.eventCount}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Avg/Event:</span> ${(metrics.attendance / metrics.eventCount).toFixed(0)}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Daily Average:</span> ${(metrics.attendance / 30).toFixed(0)}</div>
-                                <div style="font-size: 10px; color: #581c87; margin-top: 4px; padding-top: 4px; border-top: 1px solid #d8b4fe;"><span style="font-weight: 600;">RPA:</span> $${metrics.rpa.toFixed(2)}</div>
-                                <div style="font-size: 10px; color: #581c87;"><span style="font-weight: 600;">Total Sales/Att:</span> $${(metrics.totalSales / metrics.attendance).toFixed(2)}</div>
+                    <!-- Products Box - Purple background -->
+                    <div onclick="toggleReportingSection('${monthData.key}', 'products', this)" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #faf5ff, #f3e8ff); position: relative;">
+                        <div style="font-size: 11px; color: #581c87; text-transform: uppercase; font-weight: 600;">Products</div>
+                        <div style="font-size: 12px; font-weight: 600; color: #8b5cf6; line-height: 1.3;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Flash: ${metrics.totalSales > 0 ? ((metrics.flash || 0)/metrics.totalSales*100).toFixed(0) : 0}%</span>
+                                ${changes.flashPercent !== undefined ? `<span style="font-size: 10px; color: ${changes.flashPercent > 0 ? '#16a34a' : changes.flashPercent < 0 ? '#dc2626' : '#6b7280'}; font-weight: 600;">${changes.flashPercent > 0 ? '↑' : changes.flashPercent < 0 ? '↓' : '→'} ${Math.abs(changes.flashPercent).toFixed(1)}pp</span>` : ''}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Strip: ${metrics.totalSales > 0 ? ((metrics.strips || 0)/metrics.totalSales*100).toFixed(0) : 0}%</span>
+                                ${changes.stripPercent !== undefined ? `<span style="font-size: 10px; color: ${changes.stripPercent > 0 ? '#16a34a' : changes.stripPercent < 0 ? '#dc2626' : '#6b7280'}; font-weight: 600;">${changes.stripPercent > 0 ? '↑' : changes.stripPercent < 0 ? '↓' : '→'} ${Math.abs(changes.stripPercent).toFixed(1)}pp</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="expansion-${monthData.key}-products" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #d8b4fe;">
+                            <!-- Flash Details -->
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-size: 11px; color: #581c87; font-weight: 700; margin-bottom: 6px;">FLASH ${metrics.totalSales > 0 ? ((metrics.flash || 0)/metrics.totalSales*100).toFixed(0) : 0}%</div>
+                                <div style="display: grid; gap: 3px; font-size: 10px; color: #581c87;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Sales:</span>
+                                        <span>
+                                            $${(metrics.flash || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                            ${changes.flashSales !== undefined ? `<span style="color: ${changes.flashSales > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.flashSales > 0 ? '↑' : '↓'}${Math.abs(changes.flashSales).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Payouts:</span>
+                                        <span>
+                                            $${(metrics.flashPayouts || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                            ${changes.flashPayouts !== undefined ? `<span style="color: ${changes.flashPayouts > 0 ? '#dc2626' : '#16a34a'}; margin-left: 4px;">${changes.flashPayouts > 0 ? '↑' : '↓'}${Math.abs(changes.flashPayouts).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Net:</span>
+                                        <span>
+                                            $${((metrics.flash || 0) - (metrics.flashPayouts || 0)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                            ${changes.flashNet !== undefined ? `<span style="color: ${changes.flashNet > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.flashNet > 0 ? '↑' : '↓'}${Math.abs(changes.flashNet).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Margin:</span>
+                                        <span>
+                                            ${metrics.flash > 0 ? (((metrics.flash - (metrics.flashPayouts || 0))/metrics.flash)*100).toFixed(1) : 0}%
+                                            ${changes.flashMargin !== undefined ? `<span style="color: ${changes.flashMargin > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.flashMargin > 0 ? '↑' : '↓'}${Math.abs(changes.flashMargin).toFixed(1)}pp</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>RPA:</span>
+                                        <span>
+                                            $${metrics.attendance > 0 ? ((metrics.flash || 0)/metrics.attendance).toFixed(2) : '0.00'}
+                                            ${changes.flashRPA !== undefined ? `<span style="color: ${changes.flashRPA > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.flashRPA > 0 ? '↑' : '↓'}${Math.abs(changes.flashRPA).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Strip Details -->
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-size: 11px; color: #581c87; font-weight: 700; margin-bottom: 6px;">STRIP ${metrics.totalSales > 0 ? ((metrics.strips || 0)/metrics.totalSales*100).toFixed(0) : 0}%</div>
+                                <div style="display: grid; gap: 3px; font-size: 10px; color: #581c87;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Sales:</span>
+                                        <span>
+                                            $${(metrics.strips || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                            ${changes.stripSales !== undefined ? `<span style="color: ${changes.stripSales > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.stripSales > 0 ? '↑' : '↓'}${Math.abs(changes.stripSales).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Payouts:</span>
+                                        <span>
+                                            $${(metrics.stripPayouts || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                            ${changes.stripPayouts !== undefined ? `<span style="color: ${changes.stripPayouts > 0 ? '#dc2626' : '#16a34a'}; margin-left: 4px;">${changes.stripPayouts > 0 ? '↑' : '↓'}${Math.abs(changes.stripPayouts).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Net:</span>
+                                        <span>
+                                            $${((metrics.strips || 0) - (metrics.stripPayouts || 0)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                            ${changes.stripNet !== undefined ? `<span style="color: ${changes.stripNet > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.stripNet > 0 ? '↑' : '↓'}${Math.abs(changes.stripNet).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Margin:</span>
+                                        <span>
+                                            ${metrics.strips > 0 ? (((metrics.strips - (metrics.stripPayouts || 0))/metrics.strips)*100).toFixed(1) : 0}%
+                                            ${changes.stripMargin !== undefined ? `<span style="color: ${changes.stripMargin > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.stripMargin > 0 ? '↑' : '↓'}${Math.abs(changes.stripMargin).toFixed(1)}pp</span>` : ''}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>RPA:</span>
+                                        <span>
+                                            $${metrics.attendance > 0 ? ((metrics.strips || 0)/metrics.attendance).toFixed(2) : '0.00'}
+                                            ${changes.stripRPA !== undefined ? `<span style="color: ${changes.stripRPA > 0 ? '#16a34a' : '#dc2626'}; margin-left: 4px;">${changes.stripRPA > 0 ? '↑' : '↓'}${Math.abs(changes.stripRPA).toFixed(0)}%</span>` : ''}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -6371,7 +7507,7 @@
                     </div>
                     
                     <!-- Profit by Event Box - Indigo background -->
-                    <div onclick="toggleReportingSection('${monthData.key}', 'profit-event', this)" style="padding: 12px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #eef2ff, #e0e7ff); position: relative;">
+                    <div onclick="toggleReportingSection('${monthData.key}', 'profit-event', this)" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #eef2ff, #e0e7ff); position: relative;">
                         <div style="font-size: 11px; color: #312e81; text-transform: uppercase; font-weight: 600;">Profit/Event</div>
                         <div style="font-size: 18px; font-weight: 700; color: #6366f1;">$${(metrics.netSales / metrics.eventCount).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
                         ${changes.profitPerEvent !== undefined ? `<div style="position: absolute; top: 12px; right: 12px;">${formatChange(changes.profitPerEvent)}</div>` : ''}
@@ -6382,6 +7518,24 @@
                                 <div style="font-size: 10px; color: #312e81; margin-top: 4px; padding-top: 4px; border-top: 1px solid #a5b4fc;"><span style="font-weight: 600;">Gross/Event:</span> $${(metrics.totalSales / metrics.eventCount).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
                                 <div style="font-size: 10px; color: #312e81;"><span style="font-weight: 600;">Payouts/Event:</span> $${(metrics.totalPayouts / metrics.eventCount).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
                                 <div style="font-size: 10px; color: #312e81;"><span style="font-weight: 600;">Avg Attendance:</span> ${(metrics.attendance / metrics.eventCount).toFixed(0)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Attendance Box - Teal background (moved to bottom) -->
+                    <div onclick="toggleReportingSection('${monthData.key}', 'attendance', this)" style="padding: 12px; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); position: relative;">
+                        <div style="font-size: 11px; color: #134e4a; text-transform: uppercase; font-weight: 600;">Attendance</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #14b8a6;">${metrics.attendancePercent.toFixed(1)}%</div>
+                        ${changes.attendancePercent !== undefined ? `<div style="position: absolute; top: 12px; right: 12px;">${formatChange(changes.attendancePercent, true)}</div>` : ''}
+                        <div class="expansion-${monthData.key}-attendance" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #5eead4;">
+                            <div style="display: grid; gap: 4px;">
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Total Attendance:</span> ${metrics.attendance.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Total Capacity:</span> ${metrics.totalCapacity.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Total Events:</span> ${metrics.eventCount}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Avg/Event:</span> ${(metrics.attendance / metrics.eventCount).toFixed(0)}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Daily Average:</span> ${(metrics.attendance / 30).toFixed(0)}</div>
+                                <div style="font-size: 10px; color: #134e4a; margin-top: 4px; padding-top: 4px; border-top: 1px solid #5eead4;"><span style="font-weight: 600;">RPA:</span> $${metrics.rpa.toFixed(2)}</div>
+                                <div style="font-size: 10px; color: #134e4a;"><span style="font-weight: 600;">Total Sales/Att:</span> $${(metrics.totalSales / metrics.attendance).toFixed(2)}</div>
                             </div>
                         </div>
                     </div>
@@ -6529,8 +7683,581 @@
             }
         }
         
+        // New calendar-based projection system
+        function calculateEventTypeAverages() {
+            // Calculate averages from June forward for each event type
+            const events = window.VanguardData.getAllEvents();
+            const juneStart = new Date(2024, 5, 1); // June 1, 2024
+            
+            const eventTypeAverages = {};
+            const eventTypeCounts = {};
+            
+            let debugCounts = { scMonday: 0, scFriday: 0, scSatEarly: 0, scSatLate: 0, scSunEarly: 0, scSunLate: 0 };
+            
+            console.log(`[AVERAGES] Processing ${events.length} total events`);
+            let processedCount = 0;
+            let skippedOldCount = 0;
+            let skippedNoDateCount = 0;
+            
+            events.forEach(event => {
+                // Parse event date - handle both ISO format and M/D/YYYY format
+                const dateStr = (event.dateValue || event.date || '').toString().trim();
+                const isLate = dateStr.includes('Late') || dateStr.includes('PM');
+                
+                let eventDate;
+                let cleanDateStr = dateStr.replace(/\s+(Late|PM)/gi, '').trim();
+                
+                // Check if ISO format (e.g., "2025-08-22T07:00:00.000Z")
+                if (cleanDateStr.includes('T') && cleanDateStr.includes('-')) {
+                    eventDate = new Date(cleanDateStr);
+                    if (isNaN(eventDate)) {
+                        skippedNoDateCount++;
+                        return;
+                    }
+                } else if (cleanDateStr.includes('/')) {
+                    // M/D/YYYY format
+                    const [month, day, year] = cleanDateStr.split('/').map(Number);
+                    eventDate = new Date(year, month - 1, day);
+                } else {
+                    skippedNoDateCount++;
+                    return;
+                }
+                
+                // Only use events from June forward
+                if (eventDate < juneStart) {
+                    skippedOldCount++;
+                    return;
+                }
+                
+                // Process both SC and RWC events
+                
+                processedCount++;
+                
+                // Determine event type key
+                const dayOfWeek = eventDate.getDay();
+                const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
+                const location = event.location || 'Unknown';
+                const session = isLate ? 'Late' : 'Early';
+                
+                // Log SC Monday/Friday and RWC Tue/Wed/Thu events specifically
+                if (location === 'SC' && (dayOfWeek === 1 || dayOfWeek === 5)) {
+                    console.log(`[AVERAGES] SC ${dayName} event: ${dateStr}, location=${location}`);
+                } else if (location === 'RWC' && (dayOfWeek >= 2 && dayOfWeek <= 4)) {
+                    console.log(`[AVERAGES] RWC ${dayName} event: ${dateStr}, location=${location}`);
+                }
+                
+                // Debug count specific event types
+                if (location === 'SC') {
+                    if (dayOfWeek === 1) debugCounts.scMonday++;
+                    if (dayOfWeek === 5) debugCounts.scFriday++;
+                    if (dayOfWeek === 6 && !isLate) debugCounts.scSatEarly++;
+                    if (dayOfWeek === 6 && isLate) debugCounts.scSatLate++;
+                    if (dayOfWeek === 0 && !isLate) debugCounts.scSunEarly++;
+                    if (dayOfWeek === 0 && isLate) debugCounts.scSunLate++;
+                }
+                
+                // For SC: weekends have Early/Late, weekdays don't use session suffix
+                // For RWC: no session suffix needed
+                let eventTypeKey;
+                if (location === 'SC') {
+                    if (dayName === 'Saturday' || dayName === 'Sunday') {
+                        eventTypeKey = `${location}-${dayName}-${session}`;
+                    } else {
+                        // Monday, Friday don't use Early/Late suffix
+                        eventTypeKey = `${location}-${dayName}`;
+                    }
+                } else {
+                    // RWC events don't use Early/Late
+                    eventTypeKey = `${location}-${dayName}`;
+                }
+                
+                // Initialize if needed
+                if (!eventTypeAverages[eventTypeKey]) {
+                    eventTypeAverages[eventTypeKey] = { totalSales: 0, totalPayouts: 0, netSales: 0 };
+                    eventTypeCounts[eventTypeKey] = 0;
+                }
+                
+                // Add to totals
+                const totalSales = window.VanguardData.getEventValue(event, 12) || 0;
+                const totalPayouts = window.VanguardData.getEventValue(event, 29) || 0;
+                const netSales = window.VanguardData.getEventValue(event, 31) || 0;
+                
+                eventTypeAverages[eventTypeKey].totalSales += totalSales;
+                eventTypeAverages[eventTypeKey].totalPayouts += totalPayouts;
+                eventTypeAverages[eventTypeKey].netSales += netSales;
+                eventTypeCounts[eventTypeKey]++;
+            });
+            
+            // Convert totals to averages
+            Object.keys(eventTypeAverages).forEach(key => {
+                const count = eventTypeCounts[key];
+                if (count > 0) {
+                    eventTypeAverages[key].totalSales /= count;
+                    eventTypeAverages[key].totalPayouts /= count;
+                    eventTypeAverages[key].netSales /= count;
+                    eventTypeAverages[key].count = count; // Store count for debugging
+                }
+            });
+            
+            console.log('[AVERAGES] ========== AVERAGES CALCULATION SUMMARY ==========');
+            console.log(`[AVERAGES] Total events: ${events.length}`);
+            console.log(`[AVERAGES] Events before June: ${skippedOldCount}`);
+            console.log(`[AVERAGES] Events with no valid date: ${skippedNoDateCount}`);
+            console.log(`[AVERAGES] Events processed (June+): ${processedCount}`);
+            console.log('[AVERAGES] SC Event Type Counts:', debugCounts);
+            console.log('[AVERAGES] Event Type Averages Created:', Object.keys(eventTypeAverages));
+            
+            // Log the summary for each event type
+            console.log('[AVERAGES] Detailed averages by event type:');
+            Object.keys(eventTypeAverages).forEach(key => {
+                const avg = eventTypeAverages[key];
+                const count = eventTypeCounts[key];
+                console.log(`[AVERAGES]   ${key}:`);
+                console.log(`[AVERAGES]     - Count: ${count} events`);
+                console.log(`[AVERAGES]     - Avg Sales: $${avg.totalSales.toFixed(0)}`);
+                console.log(`[AVERAGES]     - Avg Payouts: $${avg.totalPayouts.toFixed(0)}`);
+                console.log(`[AVERAGES]     - Avg Net: $${avg.netSales.toFixed(0)}`);
+            });
+            console.log('[AVERAGES] ====================================================');
+            
+            return eventTypeAverages;
+        }
+        
+        function getMissingEventsForMonth(monthYear, existingEvents, location = null) {
+            // Determine what events should exist in this month based on calendar
+            const [year, month] = monthYear.split('-').map(Number);
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0); // Last day of month
+            
+            return getMissingEventsForPeriod(startDate, endDate, existingEvents, location);
+        }
+        
+        function getMissingEventsForPeriod(startDate, endDate, existingEvents, location = null) {
+            // Determine what events should exist in this period based on calendar
+            const missingEvents = [];
+            const eventTypeAverages = calculateEventTypeAverages();
+            
+            // Create a Set of existing event dates for quick lookup
+            const existingEventDates = new Set();
+            console.log(`[PROJECTION DEBUG] Building existing events set from ${existingEvents.length} events`);
+            console.log(`[PROJECTION DEBUG] Date range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+            
+            existingEvents.forEach(event => {
+                const dateStr = (event.dateValue || event.date || '').toString().trim();
+                const isLate = dateStr.includes('Late') || dateStr.includes('PM');
+                let cleanDateStr = dateStr.replace(/\s+(Late|PM)/gi, '').trim();
+                
+                let eventDate, normalizedDate;
+                
+                // Check if ISO format (e.g., "2025-08-22T07:00:00.000Z")
+                if (cleanDateStr.includes('T') && cleanDateStr.includes('-')) {
+                    eventDate = new Date(cleanDateStr);
+                    if (isNaN(eventDate)) {
+                        console.log(`[PROJECTION DEBUG] Invalid ISO date: "${dateStr}"`);
+                        return;
+                    }
+                    // Format as M/D/YYYY
+                    normalizedDate = `${eventDate.getMonth() + 1}/${eventDate.getDate()}/${eventDate.getFullYear()}`;
+                } else if (cleanDateStr.includes('/')) {
+                    // M/D/YYYY format
+                    const parts = cleanDateStr.split('/');
+                    const month = parseInt(parts[0], 10);
+                    const day = parseInt(parts[1], 10);
+                    const year = parseInt(parts[2], 10);
+                    eventDate = new Date(year, month - 1, day);
+                    normalizedDate = `${month}/${day}/${year}`;
+                } else {
+                    console.log(`[PROJECTION DEBUG] Skipping event with invalid date: "${dateStr}"`);
+                    return;
+                }
+                
+                const dayOfWeek = eventDate.getDay();
+                
+                // For SC weekdays (Monday=1, Friday=5), don't use Early suffix
+                // For SC weekends, use Early/Late
+                let key;
+                if (event.location === 'SC' && (dayOfWeek === 1 || dayOfWeek === 5)) {
+                    // Monday or Friday - no session suffix
+                    key = `${event.location}-${normalizedDate}`;
+                } else if (event.location === 'SC' && (dayOfWeek === 0 || dayOfWeek === 6)) {
+                    // Weekend - use Early/Late
+                    key = `${event.location}-${normalizedDate}-${isLate ? 'Late' : 'Early'}`;
+                } else if (event.location === 'RWC') {
+                    // RWC - no session suffix
+                    key = `${event.location}-${normalizedDate}`;
+                } else {
+                    return; // Skip unknown locations
+                }
+                
+                existingEventDates.add(key);
+                console.log(`[PROJECTION DEBUG] Added existing event: ${key} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dayOfWeek]})`);
+            });
+            
+            // Check each day in the period
+            const current = new Date(startDate);
+            const today = new Date();
+            today.setHours(23, 59, 59, 999); // Set to end of today to include today's events
+            
+            console.log(`[PROJECTION DEBUG] Checking calendar from ${current.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+            console.log(`[PROJECTION DEBUG] Today is ${today.toLocaleDateString()}`);
+            console.log(`[PROJECTION DEBUG] Will check future dates for projections`);
+            
+            let calendarCheckCount = 0;
+            // Check ALL days in the period, including future dates for projections
+            while (current <= endDate) {
+                const dayOfWeek = current.getDay();
+                const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
+                const dateStr = `${current.getMonth() + 1}/${current.getDate()}/${current.getFullYear()}`;
+                
+                calendarCheckCount++;
+                
+                // Include today and future dates, exclude past dates  
+                const currentDateOnly = new Date(current.getFullYear(), current.getMonth(), current.getDate());
+                const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const isTodayOrFuture = currentDateOnly >= todayDateOnly;
+                const dateStatus = currentDateOnly > todayDateOnly ? ' (FUTURE)' : currentDateOnly.getTime() === todayDateOnly.getTime() ? ' (TODAY)' : '';
+                
+                // Check SC events
+                if (!location || location === 'SC' || location === 'COMBINED') {
+                    if (dayOfWeek === 1 || dayOfWeek === 5) { // Monday or Friday
+                        const key = `SC-${dateStr}`; // No Early suffix for weekdays
+                        if (!existingEventDates.has(key)) {
+                            console.log(`[PROJECTION DEBUG] Missing ${dayName} event on ${dateStr}${dateStatus}`);
+                        } else {
+                            console.log(`[PROJECTION DEBUG] Found existing ${dayName} event on ${dateStr}${dateStatus}`);
+                        }
+                        if (!existingEventDates.has(key)) {
+                            // Only project today and future events, not past missed events
+                            if (isTodayOrFuture) {
+                                const avgKey = `SC-${dayName}`;
+                                console.log(`[PROJECTION DEBUG] Looking for average: ${avgKey}, exists: ${!!eventTypeAverages[avgKey]}`);
+                                if (eventTypeAverages[avgKey]) {
+                                    console.log(`[PROJECTION DEBUG] Missing ${avgKey} on ${dateStr}`);
+                                    missingEvents.push({
+                                        type: avgKey,
+                                        date: new Date(current),
+                                        ...eventTypeAverages[avgKey]
+                                    });
+                                }
+                            } else {
+                                console.log(`[PROJECTION DEBUG] Skipping past missed ${dayName} event on ${dateStr}`);
+                            }
+                        }
+                    } else if (dayOfWeek === 0 || dayOfWeek === 6) { // Sunday or Saturday
+                        // Check Early session
+                        const earlyKey = `SC-${dateStr}-Early`;
+                        if (!existingEventDates.has(earlyKey)) {
+                            // Only project today and future events, not past missed events
+                            if (isTodayOrFuture) {
+                                const avgKey = `SC-${dayName}-Early`;
+                                if (eventTypeAverages[avgKey]) {
+                                    console.log(`[PROJECTION DEBUG] Missing ${dayName} Early event on ${dateStr}${dateStatus}`);
+                                    missingEvents.push({
+                                        type: avgKey,
+                                        date: new Date(current),
+                                        ...eventTypeAverages[avgKey]
+                                    });
+                                } else {
+                                    console.log(`[PROJECTION DEBUG] No average for ${avgKey}, skipping ${dateStr} Early`);
+                                }
+                            } else {
+                                console.log(`[PROJECTION DEBUG] Skipping past missed ${dayName} Early event on ${dateStr}`);
+                            }
+                        } else {
+                            console.log(`[PROJECTION DEBUG] Found existing ${dayName} Early event on ${dateStr}${dateStatus}`);
+                        }
+                        
+                        // Check Late session
+                        const lateKey = `SC-${dateStr}-Late`;
+                        if (!existingEventDates.has(lateKey)) {
+                            // Only project today and future events, not past missed events
+                            if (isTodayOrFuture) {
+                                const avgKey = `SC-${dayName}-Late`;
+                                if (eventTypeAverages[avgKey]) {
+                                    console.log(`[PROJECTION DEBUG] Missing ${dayName} Late event on ${dateStr}${dateStatus}`);
+                                    missingEvents.push({
+                                        type: avgKey,
+                                        date: new Date(current),
+                                        ...eventTypeAverages[avgKey]
+                                    });
+                                } else {
+                                    console.log(`[PROJECTION DEBUG] No average for ${avgKey}, skipping ${dateStr} Late`);
+                                }
+                            } else {
+                                console.log(`[PROJECTION DEBUG] Skipping past missed ${dayName} Late event on ${dateStr}`);
+                            }
+                        } else {
+                            console.log(`[PROJECTION DEBUG] Found existing ${dayName} Late event on ${dateStr}${dateStatus}`);
+                        }
+                    }
+                }
+                
+                // Check RWC events
+                if (!location || location === 'RWC' || location === 'COMBINED') {
+                    if (dayOfWeek >= 2 && dayOfWeek <= 4) { // Tuesday, Wednesday, Thursday
+                        const key = `RWC-${dateStr}`; // RWC doesn't have Early/Late sessions
+                        if (!existingEventDates.has(key)) {
+                            // Only project today and future events, not past missed events
+                            if (isTodayOrFuture) {
+                                const avgKey = `RWC-${dayName}`;
+                                if (eventTypeAverages[avgKey]) {
+                                    console.log(`[PROJECTION DEBUG] Missing ${dayName} RWC event on ${dateStr}${dateStatus}`);
+                                    missingEvents.push({
+                                        type: avgKey,
+                                        date: new Date(current),
+                                        ...eventTypeAverages[avgKey]
+                                    });
+                                } else {
+                                    console.log(`[PROJECTION DEBUG] No average for ${avgKey}, skipping ${dateStr} RWC`);
+                                }
+                            } else {
+                                console.log(`[PROJECTION DEBUG] Skipping past missed ${dayName} RWC event on ${dateStr}`);
+                            }
+                        } else {
+                            console.log(`[PROJECTION DEBUG] Found existing ${dayName} RWC event on ${dateStr}${dateStatus}`);
+                        }
+                    }
+                }
+                
+                current.setDate(current.getDate() + 1);
+            }
+            
+            console.log(`[PROJECTION DEBUG] Checked ${calendarCheckCount} days in period`);
+            console.log(`[PROJECTION DEBUG] Found ${existingEventDates.size} existing events`);
+            console.log(`[PROJECTION DEBUG] Existing event keys:`, Array.from(existingEventDates));
+            
+            // Create summary of missing events by type
+            const missingByType = {};
+            missingEvents.forEach(event => {
+                if (!missingByType[event.type]) {
+                    missingByType[event.type] = {
+                        count: 0,
+                        avgSales: event.totalSales,
+                        avgPayouts: event.totalPayouts,
+                        avgNet: event.netSales,
+                        basedOnCount: event.count || 0
+                    };
+                }
+                missingByType[event.type].count++;
+            });
+            
+            console.log(`[PROJECTION] ========== PROJECTION SUMMARY ==========`);
+            console.log(`[PROJECTION] Period: ${startDate.toDateString()} to ${endDate.toDateString()}`);
+            console.log(`[PROJECTION] Location: ${location || 'ALL'}`);
+            console.log(`[PROJECTION] Total Missing Events: ${missingEvents.length}`);
+            
+            // Log details for each event type
+            Object.keys(missingByType).forEach(eventType => {
+                const info = missingByType[eventType];
+                console.log(`[PROJECTION] ${eventType}:`);
+                console.log(`[PROJECTION]   - Number needed: ${info.count}`);
+                console.log(`[PROJECTION]   - Average used: Sales=$${info.avgSales.toFixed(0)}, Payouts=$${info.avgPayouts.toFixed(0)}, Net=$${info.avgNet.toFixed(0)}`);
+                console.log(`[PROJECTION]   - Average based on: ${info.basedOnCount} events`);
+            });
+            
+            // Also log what event types we have averages for but didn't need
+            const availableTypes = Object.keys(eventTypeAverages);
+            const usedTypes = Object.keys(missingByType);
+            const unusedTypes = availableTypes.filter(t => !usedTypes.includes(t));
+            if (unusedTypes.length > 0) {
+                console.log(`[PROJECTION] Event types with averages but no missing dates: ${unusedTypes.join(', ')}`);
+            }
+            
+            console.log(`[PROJECTION] ========================================`);
+            
+            return missingEvents;
+        }
+        
         function createProjectionColumn(lastMonth) {
-            // Get the last event date to calculate % of month passed
+            // Check if we need projection for this month
+            if (!lastMonth.events || lastMonth.events.length === 0) return null;
+            
+            // Parse month to get date range
+            const monthKey = lastMonth.key; // Format: "2024-08"
+            console.log(`[PROJECTION] Creating projection for month: ${monthKey}, location: ${reportingLocationFilter}`);
+            console.log(`[PROJECTION] Month has ${lastMonth.events.length} existing events`);
+            const missingEvents = getMissingEventsForMonth(monthKey, lastMonth.events, reportingLocationFilter);
+            
+            // If no missing events, no projection needed
+            if (missingEvents.length === 0) return null;
+            
+            // Get the event type averages for tooltips
+            const eventTypeAverages = calculateEventTypeAverages();
+            
+            // Build detailed tooltip content for each metric
+            const buildTooltipContent = (metric) => {
+                const relevantTypes = Object.keys(eventTypeAverages).filter(type => 
+                    missingEvents.some(event => event.type === type)
+                );
+                
+                let content = `DETAILED ${metric.toUpperCase()} AVERAGES:\n\n`;
+                relevantTypes.forEach(type => {
+                    const avg = eventTypeAverages[type];
+                    const count = avg.count || 0;
+                    const value = metric === 'totalSales' ? avg.totalSales : 
+                                 metric === 'totalPayouts' ? avg.totalPayouts : avg.netSales;
+                    content += `${type}:\n  $${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} (${count} events)\n\n`;
+                });
+                
+                const projectedCount = missingEvents.filter(e => relevantTypes.includes(e.type)).length;
+                content += `Total projected events: ${projectedCount}\n`;
+                content += `Based on events from June forward`;
+                
+                return content;
+            };
+            
+            // Calculate projection totals
+            const projectionTotals = {
+                totalSales: 0,
+                totalPayouts: 0,
+                netSales: 0
+            };
+            
+            missingEvents.forEach(event => {
+                projectionTotals.totalSales += event.totalSales;
+                projectionTotals.totalPayouts += event.totalPayouts;
+                projectionTotals.netSales += event.netSales;
+            });
+            
+            // Add existing actuals
+            const actualMetrics = lastMonth.metrics;
+            const projectedMetrics = {
+                totalSales: actualMetrics.totalSales + projectionTotals.totalSales,
+                totalPayouts: actualMetrics.totalPayouts + projectionTotals.totalPayouts,
+                netSales: actualMetrics.netSales + projectionTotals.netSales,
+                margin: ((actualMetrics.totalSales + projectionTotals.totalSales - actualMetrics.totalPayouts - projectionTotals.totalPayouts) / 
+                        (actualMetrics.totalSales + projectionTotals.totalSales)) * 100
+            };
+            
+            const projDiv = document.createElement('div');
+            projDiv.style.cssText = 'width: 200px; flex-shrink: 0;';
+            
+            projDiv.innerHTML = `
+                <div style="background: white; border: 2px dashed #10b981; border-radius: 8px; overflow: visible;">
+                    <!-- Projection Header -->
+                    <div style="background: white; padding: 10px; border-bottom: 1px solid #e5e7eb; position: relative;">
+                        <div style="font-size: 14px; font-weight: 600; color: #374151;">Month Projection</div>
+                        <div style="font-size: 11px; color: #6b7280;">${lastMonth.events.length} Actual + ${missingEvents.length} Projected</div>
+                        ${TooltipHelpers.createInfoIcon(`MONTHLY PROJECTION ASSUMPTIONS:
+
+SC Events Expected:
+• 2 Saturday events (Early & Late)
+• 2 Sunday events (Early & Late)
+• Monday events
+• Friday events
+
+RWC Events Expected:
+• Tuesday events
+• Wednesday events
+• Thursday events
+
+Averages based on all similar events from June forward.
+Hover over individual metrics for detailed averages.`)}
+                    </div>
+                    
+                    <!-- Projected Total Sales -->
+                    <div style="background: linear-gradient(135deg, #eff6ff, #dbeafe); padding: 12px; border-bottom: 1px dashed #60a5fa; position: relative; cursor: help;">
+                        <div style="font-size: 11px; color: #1d4ed8; text-transform: uppercase; font-weight: 600;">Projected Total Sales</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #1e40af;">$${projectedMetrics.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                        <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                            Actual: $${actualMetrics.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280;">
+                            Added: $${projectionTotals.totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="
+                            position: absolute; 
+                            top: 0; 
+                            left: 0;
+                            background: white; 
+                            border: 1px solid #d1d5db; 
+                            border-radius: 6px; 
+                            padding: 8px 10px; 
+                            font-size: 10px; 
+                            font-weight: normal; 
+                            color: #374151; 
+                            white-space: pre-line; 
+                            z-index: 1000; 
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+                            min-width: 250px;
+                            max-width: 350px;
+                            opacity: 0; 
+                            visibility: hidden; 
+                            transition: opacity 0.2s, visibility 0.2s;
+                        " class="metric-tooltip">${buildTooltipContent('totalSales')}</div>
+                    </div>
+                    
+                    <!-- Projected Payouts -->
+                    <div style="background: linear-gradient(135deg, #fef2f2, #fecaca); padding: 12px; border-bottom: 1px dashed #f87171; position: relative; cursor: help;">
+                        <div style="font-size: 11px; color: #dc2626; text-transform: uppercase; font-weight: 600;">Projected Payouts</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #b91c1c;">$${projectedMetrics.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                        <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                            Actual: $${actualMetrics.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280;">
+                            Added: $${projectionTotals.totalPayouts.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="
+                            position: absolute; 
+                            top: 0; 
+                            left: 0;
+                            background: white; 
+                            border: 1px solid #d1d5db; 
+                            border-radius: 6px; 
+                            padding: 8px 10px; 
+                            font-size: 10px; 
+                            font-weight: normal; 
+                            color: #374151; 
+                            white-space: pre-line; 
+                            z-index: 1000; 
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+                            min-width: 250px;
+                            max-width: 350px;
+                            opacity: 0; 
+                            visibility: hidden; 
+                            transition: opacity 0.2s, visibility 0.2s;
+                        " class="metric-tooltip">${buildTooltipContent('totalPayouts')}</div>
+                    </div>
+                    
+                    <!-- Projected Net Sales -->
+                    <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: 12px; position: relative; cursor: help;">
+                        <div style="font-size: 11px; color: #065f46; text-transform: uppercase; font-weight: 600;">Projected Net Sales</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #059669;">$${projectedMetrics.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+                        <div style="font-size: 10px; color: #6b7280; margin-top: 4px;">
+                            Actual: $${actualMetrics.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280;">
+                            Added: $${projectionTotals.netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        </div>
+                        <div style="
+                            position: absolute; 
+                            top: 0; 
+                            left: 0;
+                            background: white; 
+                            border: 1px solid #d1d5db; 
+                            border-radius: 6px; 
+                            padding: 8px 10px; 
+                            font-size: 10px; 
+                            font-weight: normal; 
+                            color: #374151; 
+                            white-space: pre-line; 
+                            z-index: 1000; 
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+                            min-width: 250px;
+                            max-width: 350px;
+                            opacity: 0; 
+                            visibility: hidden; 
+                            transition: opacity 0.2s, visibility 0.2s;
+                        " class="metric-tooltip">${buildTooltipContent('netSales')}</div>
+                    </div>
+                </div>
+            `;
+            
+            return projDiv;
+        }
+        
+        function createProjectionColumn_OLD(lastMonth) {
+            // Old percentage-based projection - keeping for reference
             if (!lastMonth.events || lastMonth.events.length === 0) return null;
             
             // Parse date properly from MM/DD/YYYY format or dateValue
@@ -8398,6 +10125,14 @@
                 localStorage.removeItem('vanguard_data_cache');
                 localStorage.removeItem('vanguard_last_check');
                 
+                // Clear EventManager data to force reload
+                if (window.EventManager) {
+                    window.EventManager.events = [];
+                    window.EventManager.eventsById = {};
+                    window.EventManager.eventsByLocation = { SC: [], RWC: [] };
+                    console.log('🔄 Cleared EventManager cache');
+                }
+                
                 // Show loading indicator on refresh button
                 const btn = document.querySelector('button[onclick="forceDataRefresh()"]');
                 if (btn) {
@@ -8631,6 +10366,48 @@ document.addEventListener('DOMContentLoaded', function() {
         const sheetsViewType = document.getElementById('sheetsViewType');
         if (sheetsViewType) {
             sheetsViewType.addEventListener('change', () => AppSounds.play('navigate'));
+        }
+        
+        // Add handler for Change Comparison button
+        const changeComparisonBtn = document.getElementById('changeComparisonBtn');
+        if (changeComparisonBtn) {
+            changeComparisonBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                AppSounds.play('click');
+                
+                // Scroll to top smoothly
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // Add highlight animation to the Compare To box
+                const compareBox = document.getElementById('compareToBox');
+                if (compareBox) {
+                    // Remove animation class if it exists (to restart animation)
+                    compareBox.classList.remove('highlight-animation');
+                    // Force reflow to restart animation
+                    void compareBox.offsetWidth;
+                    // Add animation class
+                    compareBox.classList.add('highlight-animation');
+                    
+                    // Remove animation class after animation completes
+                    setTimeout(() => {
+                        compareBox.classList.remove('highlight-animation');
+                    }, 2000);
+                }
+            });
+        }
+        
+        // Add tooltip hover behavior for info icon
+        const infoTooltip = document.querySelector('.info-tooltip');
+        if (infoTooltip) {
+            const tooltipContent = infoTooltip.querySelector('.tooltip-content');
+            if (tooltipContent) {
+                infoTooltip.addEventListener('mouseenter', function() {
+                    tooltipContent.style.display = 'block';
+                });
+                infoTooltip.addEventListener('mouseleave', function() {
+                    tooltipContent.style.display = 'none';
+                });
+            }
         }
         
         // Add sounds to day filter elements
