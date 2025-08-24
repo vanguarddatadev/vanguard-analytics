@@ -1,7 +1,7 @@
 // Service Worker for Vanguard Bingo Analytics PWA
-const VERSION = '1.10'; // Version 1.10 - Major reporting improvements
+const VERSION = '1.1'; // Version 1.1 - Major reporting improvements
 const CACHE_NAME = `vanguard-v${VERSION}`;
-const DATA_CACHE_NAME = 'vanguard-data-v1';
+const DATA_CACHE_NAME = 'vanguard-data-v1.1'; // Force data refresh with version update
 
 // Files to cache for offline use - using relative paths for GitHub Pages
 const urlsToCache = [
