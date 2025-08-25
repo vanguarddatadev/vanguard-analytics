@@ -3016,8 +3016,8 @@ Pool: Shows the number of historical events that match all your selected filters
                                 localStorage.setItem('vanguard_data_cache', JSON.stringify(cacheData));
                                 console.log('Data fetched and cached successfully');
                                 
-                                // Reload page to initialize with new data
-                                location.reload();
+                                // Don't reload - let the caller handle initialization
+                                // location.reload() removed to prevent infinite loop
                             }
                             
                             resolve(data);
