@@ -1,7 +1,7 @@
 // Service Worker for Vanguard Bingo Analytics PWA
-const VERSION = '1.1'; // Version 1.1 - Major reporting improvements
+const VERSION = '1.1.1'; // Version 1.1.1 - Hotball fix and 2-digit year support
 const CACHE_NAME = `vanguard-v${VERSION}`;
-const DATA_CACHE_NAME = 'vanguard-data-v1.1'; // Force data refresh with version update
+const DATA_CACHE_NAME = 'vanguard-data-v1.1.1'; // Force data refresh with version update
 
 // Files to cache for offline use - using relative paths for GitHub Pages
 const urlsToCache = [

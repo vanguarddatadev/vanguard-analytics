@@ -1,7 +1,7 @@
 {
   "name": "Vanguard Bingo Analytics",
   "short_name": "Vanguard",
-  "version": "1.1",
+  "version": "1.1.1",
   "description": "Bingo analytics dashboard for Vanguard Charity events",
   "start_url": "./app.html",
   "display": "standalone",
