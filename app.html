@@ -3554,15 +3554,9 @@ Pool: Shows the number of historical events that match all your selected filters
                 console.log('Raw Row 35:', event.getRowValue(35));
                 console.log('Raw Row 36:', event.getRowValue(36));
                 
-                // CRITICAL: If Row 35 (hotballChange) is negative, it means hotball was hit
-                // We need to add the absolute value to Row 36 to get the actual hotball total
+                // Use Row 36 directly as the Hotball Total (no adjustments needed)
                 let adjustedHotballTotal = event.hotballTotal;
-                if (event.hotballChange < 0) {
-                    adjustedHotballTotal = event.hotballTotal + Math.abs(event.hotballChange);
-                    console.log('Hotball was hit! Adjusting:', event.hotballTotal, '+', Math.abs(event.hotballChange), '=', adjustedHotballTotal);
-                } else {
-                    console.log('No hotball hit, using:', adjustedHotballTotal);
-                }
+                console.log('Hotball Total from row 36:', adjustedHotballTotal);
                 
                 // Update Hotball value with ADJUSTED total
                 const hotballValueEl = document.getElementById('hotballValue');
