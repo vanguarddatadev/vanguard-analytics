@@ -7898,9 +7898,15 @@ Hover over individual metrics for detailed averages.`)}
             const today = new Date();
             today.setHours(23, 59, 59, 999); // Set to end of today to include today's events
             
+            // Include yesterday for projection (data entry lag)
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+            
             console.log(`[PROJECTION DEBUG] Checking calendar from ${current.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
             console.log(`[PROJECTION DEBUG] Today is ${today.toLocaleDateString()}`);
-            console.log(`[PROJECTION DEBUG] Will check future dates for projections`);
+            console.log(`[PROJECTION DEBUG] Yesterday is ${yesterday.toLocaleDateString()}`);
+            console.log(`[PROJECTION DEBUG] Will check yesterday, today, and future dates for projections`);
             
             let calendarCheckCount = 0;
             // Check ALL days in the period, including future dates for projections
@@ -7911,11 +7917,14 @@ Hover over individual metrics for detailed averages.`)}
                 
                 calendarCheckCount++;
                 
-                // Include today and future dates, exclude past dates  
+                // Include yesterday, today and future dates, exclude older past dates  
                 const currentDateOnly = new Date(current.getFullYear(), current.getMonth(), current.getDate());
                 const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                const isTodayOrFuture = currentDateOnly >= todayDateOnly;
-                const dateStatus = currentDateOnly > todayDateOnly ? ' (FUTURE)' : currentDateOnly.getTime() === todayDateOnly.getTime() ? ' (TODAY)' : '';
+                const yesterdayDateOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+                const isYesterdayOrLater = currentDateOnly >= yesterdayDateOnly;
+                const dateStatus = currentDateOnly > todayDateOnly ? ' (FUTURE)' : 
+                                  currentDateOnly.getTime() === todayDateOnly.getTime() ? ' (TODAY)' : 
+                                  currentDateOnly.getTime() === yesterdayDateOnly.getTime() ? ' (YESTERDAY)' : '';
                 
                 // Check SC events
                 if (!location || location === 'SC' || location === 'COMBINED') {
@@ -7927,8 +7936,8 @@ Hover over individual metrics for detailed averages.`)}
                             console.log(`[PROJECTION DEBUG] Found existing ${dayName} event on ${dateStr}${dateStatus}`);
                         }
                         if (!existingEventDates.has(key)) {
-                            // Only project today and future events, not past missed events
-                            if (isTodayOrFuture) {
+                            // Only project yesterday, today and future events, not older past missed events
+                            if (isYesterdayOrLater) {
                                 const avgKey = `SC-${dayName}`;
                                 console.log(`[PROJECTION DEBUG] Looking for average: ${avgKey}, exists: ${!!eventTypeAverages[avgKey]}`);
                                 if (eventTypeAverages[avgKey]) {
@@ -7948,7 +7957,7 @@ Hover over individual metrics for detailed averages.`)}
                         const earlyKey = `SC-${dateStr}-Early`;
                         if (!existingEventDates.has(earlyKey)) {
                             // Only project today and future events, not past missed events
-                            if (isTodayOrFuture) {
+                            if (isYesterdayOrLater) {
                                 const avgKey = `SC-${dayName}-Early`;
                                 if (eventTypeAverages[avgKey]) {
                                     console.log(`[PROJECTION DEBUG] Missing ${dayName} Early event on ${dateStr}${dateStatus}`);
@@ -7971,7 +7980,7 @@ Hover over individual metrics for detailed averages.`)}
                         const lateKey = `SC-${dateStr}-Late`;
                         if (!existingEventDates.has(lateKey)) {
                             // Only project today and future events, not past missed events
-                            if (isTodayOrFuture) {
+                            if (isYesterdayOrLater) {
                                 const avgKey = `SC-${dayName}-Late`;
                                 if (eventTypeAverages[avgKey]) {
                                     console.log(`[PROJECTION DEBUG] Missing ${dayName} Late event on ${dateStr}${dateStatus}`);
@@ -7997,8 +8006,8 @@ Hover over individual metrics for detailed averages.`)}
                     if (dayOfWeek >= 2 && dayOfWeek <= 4) { // Tuesday, Wednesday, Thursday
                         const key = `RWC-${dateStr}`; // RWC doesn't have Early/Late sessions
                         if (!existingEventDates.has(key)) {
-                            // Only project today and future events, not past missed events
-                            if (isTodayOrFuture) {
+                            // Only project yesterday, today and future events, not older past missed events
+                            if (isYesterdayOrLater) {
                                 const avgKey = `RWC-${dayName}`;
                                 if (eventTypeAverages[avgKey]) {
                                     console.log(`[PROJECTION DEBUG] Missing ${dayName} RWC event on ${dateStr}${dateStatus}`);
@@ -10445,28 +10454,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasData = window.VanguardData.data?.sc?.columns?.length > 0 || 
                        window.VanguardData.data?.rwc?.columns?.length > 0;
         
-        if (!hasData) {
-            console.log('No data in cache, fetching from server...');
-            // No data in cache, fetch from server
-            window.VanguardData.fetchData().then(() => {
-                console.log('Data fetched from server');
-                initializeAppWithData();
-            }).catch(error => {
-                console.error('Failed to fetch initial data:', error);
-            });
-        } else {
-            // We have cached data, use it
-            console.log('Data structure loaded:', {
-                sc: window.VanguardData.data?.sc ? 'loaded' : 'missing',
-                rwc: window.VanguardData.data?.rwc ? 'loaded' : 'missing', 
-                scMonthly: window.VanguardData.data?.scMonthly ? 'loaded' : 'missing',
-                rwcMonthly: window.VanguardData.data?.rwcMonthly ? 'loaded' : 'missing',
-                scColumns: window.VanguardData.data?.sc?.columns?.length || 0,
-                rwcColumns: window.VanguardData.data?.rwc?.columns?.length || 0
-            });
-            
+        // Always fetch fresh data on app load, regardless of cache
+        console.log('Fetching fresh data from server on app load...');
+        window.VanguardData.fetchData().then(() => {
+            console.log('Fresh data fetched successfully from server');
             initializeAppWithData();
-        }
+        }).catch(error => {
+            console.error('Failed to fetch fresh data:', error);
+            
+            // Fall back to cache if fetch fails
+            if (hasData) {
+                console.log('Network error - falling back to cached data:', {
+                    sc: window.VanguardData.data?.sc ? 'loaded' : 'missing',
+                    rwc: window.VanguardData.data?.rwc ? 'loaded' : 'missing', 
+                    scMonthly: window.VanguardData.data?.scMonthly ? 'loaded' : 'missing',
+                    rwcMonthly: window.VanguardData.data?.rwcMonthly ? 'loaded' : 'missing',
+                    scColumns: window.VanguardData.data?.sc?.columns?.length || 0,
+                    rwcColumns: window.VanguardData.data?.rwc?.columns?.length || 0
+                });
+                initializeAppWithData();
+            } else {
+                console.error('No data available - both fetch and cache failed');
+                // Show error to user
+                alert('Unable to load data. Please check your internet connection and refresh the page.');
+            }
+        });
     }
     
     // Function to initialize app with data
