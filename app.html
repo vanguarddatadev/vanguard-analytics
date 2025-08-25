@@ -6581,7 +6581,9 @@ Pool: Shows the number of historical events that match all your selected filters
                     
                     if (dateStr.includes('/')) {
                         const [month, day, year] = dateStr.split('/').map(Number);
-                        date = new Date(year, month - 1, day);
+                        // Handle 2-digit years (assume 2000s)
+                        const fullYear = year < 100 ? 2000 + year : year;
+                        date = new Date(fullYear, month - 1, day);
                     } else {
                         // Try parsing as a standard date string
                         date = new Date(dateStr);
@@ -7715,9 +7717,11 @@ Hover over individual metrics for detailed averages.`)}
                         return;
                     }
                 } else if (cleanDateStr.includes('/')) {
-                    // M/D/YYYY format
+                    // M/D/YYYY or M/D/YY format
                     const [month, day, year] = cleanDateStr.split('/').map(Number);
-                    eventDate = new Date(year, month - 1, day);
+                    // Handle 2-digit years (assume 2000s)
+                    const fullYear = year < 100 ? 2000 + year : year;
+                    eventDate = new Date(fullYear, month - 1, day);
                 } else {
                     skippedNoDateCount++;
                     return;
@@ -7859,13 +7863,15 @@ Hover over individual metrics for detailed averages.`)}
                     // Format as M/D/YYYY
                     normalizedDate = `${eventDate.getMonth() + 1}/${eventDate.getDate()}/${eventDate.getFullYear()}`;
                 } else if (cleanDateStr.includes('/')) {
-                    // M/D/YYYY format
+                    // M/D/YYYY or M/D/YY format
                     const parts = cleanDateStr.split('/');
                     const month = parseInt(parts[0], 10);
                     const day = parseInt(parts[1], 10);
                     const year = parseInt(parts[2], 10);
-                    eventDate = new Date(year, month - 1, day);
-                    normalizedDate = `${month}/${day}/${year}`;
+                    // Handle 2-digit years (assume 2000s)
+                    const fullYear = year < 100 ? 2000 + year : year;
+                    eventDate = new Date(fullYear, month - 1, day);
+                    normalizedDate = `${month}/${day}/${fullYear}`;
                 } else {
                     console.log(`[PROJECTION DEBUG] Skipping event with invalid date: "${dateStr}"`);
                     return;
