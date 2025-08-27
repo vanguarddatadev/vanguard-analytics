@@ -1849,7 +1849,7 @@
         <div class="nav-brand">
             <img src="./vanguard_logo.png" alt="Vanguard" style="height: 65px; margin-right: 18px; vertical-align: middle;">
             <span style="vertical-align: middle; font-size: 22px; font-weight: 600;">Bingo Analytics</span>
-            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.1.2</span>
+            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.1.4</span>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
             <div class="nav-tabs">
@@ -2023,6 +2023,18 @@ Pool: Shows the number of historical events that match all your selected filters
                     <div class="spotlight-expansion">
                         <div class="expansion-value">-</div>
                         <div class="expansion-count">-</div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
+                            <div class="rpa-strip" style="margin-bottom: 5px;">
+                                <span style="font-size: 11px;">RPA - Strip: </span>
+                                <span id="rpaStripValue" style="font-weight: 600;">$0</span>
+                                <span id="rpaStripChange" style="font-size: 10px; margin-left: 8px;">-</span>
+                            </div>
+                            <div class="rpa-flash">
+                                <span style="font-size: 11px;">RPA - Flash: </span>
+                                <span id="rpaFlashValue" style="font-weight: 600;">$0</span>
+                                <span id="rpaFlashChange" style="font-size: 10px; margin-left: 8px;">-</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="spotlight-card expandable" data-metric="total-sales">
@@ -2300,11 +2312,18 @@ Pool: Shows the number of historical events that match all your selected filters
                                         <span style="font-size: 11px; font-weight: 500;" id="flashNetChange">-</span>
                                     </div>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(251, 191, 36, 0.3);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(251, 191, 36, 0.3); margin-bottom: 8px;">
                                     <span style="font-size: 13px; color: #92400e;">Margin</span>
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <span style="font-size: 18px; font-weight: 700; color: #78350f;" id="flashMargin">0%</span>
                                         <span style="font-size: 11px; font-weight: 500;" id="flashMarginChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(251, 191, 36, 0.3);">
+                                    <span style="font-size: 13px; color: #92400e;">RPA</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #78350f;" id="flashRPA">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="flashRPAChange">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -2346,11 +2365,18 @@ Pool: Shows the number of historical events that match all your selected filters
                                         <span style="font-size: 11px; font-weight: 500;" id="stripNetChange">-</span>
                                     </div>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(236, 72, 153, 0.3);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(236, 72, 153, 0.3); margin-bottom: 8px;">
                                     <span style="font-size: 13px; color: #831843;">Margin</span>
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <span style="font-size: 18px; font-weight: 700; color: #701a75;" id="stripMargin">0%</span>
                                         <span style="font-size: 11px; font-weight: 500;" id="stripMarginChange">-</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(236, 72, 153, 0.3);">
+                                    <span style="font-size: 13px; color: #831843;">RPA</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 16px; font-weight: 600; color: #701a75;" id="stripRPA">$0</span>
+                                        <span style="font-size: 11px; font-weight: 500;" id="stripRPAChange">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -3668,6 +3694,13 @@ Pool: Shows the number of historical events that match all your selected filters
                             break;
                         case 'RPA':
                             valueEl.textContent = '$' + event.rpa.toFixed(0);
+                            // Update Flash and Strip RPA values
+                            const flashRPA = event.attendance > 0 ? (event.flash || 0) / event.attendance : 0;
+                            const stripRPA = event.attendance > 0 ? (event.strips || 0) / event.attendance : 0;
+                            const flashRPAEl = document.getElementById('rpaFlashValue');
+                            const stripRPAEl = document.getElementById('rpaStripValue');
+                            if (flashRPAEl) flashRPAEl.textContent = `$${flashRPA.toFixed(0)}`;
+                            if (stripRPAEl) stripRPAEl.textContent = `$${stripRPA.toFixed(0)}`;
                             break;
                         case 'Attendance':
                             // Calculate percentage based on max attendance
@@ -4157,6 +4190,57 @@ Pool: Shows the number of historical events that match all your selected filters
                         case 'RPA':
                             currentValue = this.currentEvent.rpa;
                             avgValue = averages.rpa;
+                            
+                            // Calculate Flash and Strip RPA comparisons
+                            if (pool.length > 0 && this.currentEvent.attendance > 0) {
+                                // Current values
+                                const currentFlashRPA = (this.currentEvent.flash || 0) / this.currentEvent.attendance;
+                                const currentStripRPA = (this.currentEvent.strips || 0) / this.currentEvent.attendance;
+                                
+                                // Pool averages
+                                const avgFlashRevenue = pool.reduce((sum, e) => sum + (e.flash || 0), 0) / pool.length;
+                                const avgStripRevenue = pool.reduce((sum, e) => sum + (e.strips || 0), 0) / pool.length;
+                                const avgAttendance = pool.reduce((sum, e) => sum + (e.attendance || 0), 0) / pool.length;
+                                
+                                const avgFlashRPA = avgAttendance > 0 ? avgFlashRevenue / avgAttendance : 0;
+                                const avgStripRPA = avgAttendance > 0 ? avgStripRevenue / avgAttendance : 0;
+                                
+                                // Update Flash RPA change
+                                const flashRPAChangeEl = document.getElementById('rpaFlashChange');
+                                if (flashRPAChangeEl && avgFlashRPA > 0) {
+                                    const flashChange = ((currentFlashRPA - avgFlashRPA) / avgFlashRPA) * 100;
+                                    const arrow = flashChange > 0 ? '↑' : flashChange < 0 ? '↓' : '';
+                                    flashRPAChangeEl.textContent = `${arrow}${Math.abs(flashChange).toFixed(1)}%`;
+                                    flashRPAChangeEl.style.color = flashChange > 0 ? '#10b981' : flashChange < 0 ? '#ef4444' : '#64748b';
+                                } else if (flashRPAChangeEl) {
+                                    flashRPAChangeEl.textContent = '-';
+                                    flashRPAChangeEl.style.color = '#64748b';
+                                }
+                                
+                                // Update Strip RPA change
+                                const stripRPAChangeEl = document.getElementById('rpaStripChange');
+                                if (stripRPAChangeEl && avgStripRPA > 0) {
+                                    const stripChange = ((currentStripRPA - avgStripRPA) / avgStripRPA) * 100;
+                                    const arrow = stripChange > 0 ? '↑' : stripChange < 0 ? '↓' : '';
+                                    stripRPAChangeEl.textContent = `${arrow}${Math.abs(stripChange).toFixed(1)}%`;
+                                    stripRPAChangeEl.style.color = stripChange > 0 ? '#10b981' : stripChange < 0 ? '#ef4444' : '#64748b';
+                                } else if (stripRPAChangeEl) {
+                                    stripRPAChangeEl.textContent = '-';
+                                    stripRPAChangeEl.style.color = '#64748b';
+                                }
+                            } else {
+                                // Clear changes if no comparison
+                                const flashChangeEl = document.getElementById('rpaFlashChange');
+                                const stripChangeEl = document.getElementById('rpaStripChange');
+                                if (flashChangeEl) {
+                                    flashChangeEl.textContent = '-';
+                                    flashChangeEl.style.color = '#64748b';
+                                }
+                                if (stripChangeEl) {
+                                    stripChangeEl.textContent = '-';
+                                    stripChangeEl.style.color = '#64748b';
+                                }
+                            }
                             break;
                         case 'Attendance':
                             currentValue = this.currentEvent.attendance;
@@ -5016,6 +5100,16 @@ Pool: Shows the number of historical events that match all your selected filters
                         margin > 0 ? `${margin.toFixed(1)}%` : '0%';
                 }
                 
+                // Update RPA for Flash and Strip only
+                if (product !== 'other') {
+                    const attendance = currentEvent.attendance || 0;
+                    const rpa = attendance > 0 ? revenue / attendance : 0;
+                    const rpaEl = document.getElementById(`${product}RPA`);
+                    if (rpaEl) {
+                        rpaEl.textContent = `$${rpa.toFixed(0)}`;
+                    }
+                }
+                
                 // Update individual comparison values
                 if (comparisonMetrics && comparisonMetrics[product]) {
                     // Calculate all changes
@@ -5083,10 +5177,39 @@ Pool: Shows the number of historical events that match all your selected filters
                             marginChangeEl.style.color = marginPPChange > 0 ? '#10b981' : marginPPChange < 0 ? '#ef4444' : '#64748b';
                         }
                     }
+                    
+                    // RPA change for Flash and Strip only
+                    if (product !== 'other') {
+                        const rpaChangeEl = document.getElementById(`${product}RPAChange`);
+                        if (rpaChangeEl && comparisonPool && comparisonPool.length > 0) {
+                            // Calculate average attendance from comparison pool
+                            const avgAttendance = comparisonPool.reduce((sum, e) => sum + (e.attendance || 0), 0) / comparisonPool.length;
+                            const compRPA = avgAttendance > 0 ? compRevenue / avgAttendance : 0;
+                            const attendance = currentEvent.attendance || 0;
+                            const currentRPA = attendance > 0 ? revenue / attendance : 0;
+                            
+                            if (compRPA > 0) {
+                                const rpaChange = ((currentRPA - compRPA) / compRPA) * 100;
+                                const arrow = rpaChange > 0 ? '↑' : rpaChange < 0 ? '↓' : '';
+                                rpaChangeEl.textContent = `${arrow}${Math.abs(rpaChange).toFixed(1)}%`;
+                                rpaChangeEl.style.color = rpaChange > 0 ? '#10b981' : rpaChange < 0 ? '#ef4444' : '#64748b';
+                            } else {
+                                rpaChangeEl.textContent = '-';
+                                rpaChangeEl.style.color = '#64748b';
+                            }
+                        } else if (rpaChangeEl) {
+                            rpaChangeEl.textContent = '-';
+                            rpaChangeEl.style.color = '#64748b';
+                        }
+                    }
                 } else {
                     // No comparison data - set all to dash
-                    [`${product}RevenueChange`, `${product}PayoutsChange`, 
-                     `${product}NetChange`, `${product}MarginChange`].forEach(id => {
+                    const changeIds = [`${product}RevenueChange`, `${product}PayoutsChange`, 
+                                      `${product}NetChange`, `${product}MarginChange`];
+                    if (product !== 'other') {
+                        changeIds.push(`${product}RPAChange`);
+                    }
+                    changeIds.forEach(id => {
                         const el = document.getElementById(id);
                         if (el) {
                             el.textContent = '-';
@@ -5681,6 +5804,7 @@ Pool: Shows the number of historical events that match all your selected filters
         // COMPLETELY NEW FROM SCRATCH
         function updateMonthlyRevenueChart() {
             console.log('=== STARTING OVER - NEW CHART ===');
+            console.log('Chart Location Filter:', chartLocationFilter);
             
             const container = document.getElementById('monthly-chart-container');
             if (!container) return;
@@ -5694,13 +5818,11 @@ Pool: Shows the number of historical events that match all your selected filters
                 return;
             }
             
-            // Build data array - SIMPLE
-            const months = [];
-            const grossValues = [];
-            const netValues = [];
+            // Build data array based on location filter
+            const monthlyData = {};
             
-            // Get SC Monthly columns - SKIP Total and Average columns
-            if (window.VanguardData.data.scMonthly?.columns) {
+            // Process SC Monthly data if not filtered to RWC only
+            if (chartLocationFilter !== 'RWC' && window.VanguardData.data.scMonthly?.columns) {
                 window.VanguardData.data.scMonthly.columns.forEach(col => {
                     if (col.header && col.data) {
                         // Skip Total and Average columns
@@ -5710,18 +5832,62 @@ Pool: Shows the number of historical events that match all your selected filters
                         }
                         
                         // The working code from Reporting uses col.data.row12.value
-                        const gross = col.data?.row12?.value || 0;
-                        const net = col.data?.row31?.value || 0;
+                        const gross = parseFloat(col.data?.row12?.value || 0);
+                        const net = parseFloat(col.data?.row31?.value || 0);
                         
-                        months.push(col.header);
-                        grossValues.push(parseFloat(gross));
-                        netValues.push(parseFloat(net));
+                        if (!monthlyData[col.header]) {
+                            monthlyData[col.header] = { gross: 0, net: 0 };
+                        }
+                        monthlyData[col.header].gross += gross;
+                        monthlyData[col.header].net += net;
                     }
                 });
             }
             
+            // Process RWC Monthly data if not filtered to SC only
+            if (chartLocationFilter !== 'SC' && window.VanguardData.data.rwcMonthly?.columns) {
+                window.VanguardData.data.rwcMonthly.columns.forEach(col => {
+                    if (col.header && col.data) {
+                        // Skip Total and Average columns
+                        const headerLower = col.header.toLowerCase();
+                        if (headerLower.includes('total') || headerLower.includes('average')) {
+                            return; // Skip this column
+                        }
+                        
+                        // The working code from Reporting uses col.data.row12.value
+                        const gross = parseFloat(col.data?.row12?.value || 0);
+                        const net = parseFloat(col.data?.row31?.value || 0);
+                        
+                        if (!monthlyData[col.header]) {
+                            monthlyData[col.header] = { gross: 0, net: 0 };
+                        }
+                        monthlyData[col.header].gross += gross;
+                        monthlyData[col.header].net += net;
+                    }
+                });
+            }
+            
+            // Convert to arrays and sort chronologically
+            const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+                const [aMonth, aYear] = a.split('-');
+                const [bMonth, bYear] = b.split('-');
+                const aYearNum = parseInt(aYear) || 0;
+                const bYearNum = parseInt(bYear) || 0;
+                
+                // Convert 2-digit years to 4-digit
+                const aFullYear = aYearNum < 100 ? 2000 + aYearNum : aYearNum;
+                const bFullYear = bYearNum < 100 ? 2000 + bYearNum : bYearNum;
+                
+                if (aFullYear !== bFullYear) return aFullYear - bFullYear;
+                return monthOrder.indexOf(aMonth) - monthOrder.indexOf(bMonth);
+            });
+            
+            const grossValues = sortedMonths.map(month => monthlyData[month].gross);
+            const netValues = sortedMonths.map(month => monthlyData[month].net);
+            
             // Get last 12 months
-            const last12Months = months.slice(-12);
+            const last12Months = sortedMonths.slice(-12);
             const last12Gross = grossValues.slice(-12);
             const last12Net = netValues.slice(-12);
             
@@ -5769,9 +5935,14 @@ Pool: Shows the number of historical events that match all your selected filters
                 return `${x},${y}`;
             }).join(' ');
             
+            // Get location label for title
+            const locationLabel = chartLocationFilter === 'SC' ? ' - Santa Clara' : 
+                                 chartLocationFilter === 'RWC' ? ' - Redwood City' : 
+                                 ' - Combined';
+            
             container.innerHTML = `
                 <div style="padding: 20px; background: white; border-radius: 8px;">
-                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">Revenue+ (12 Months)</h3>
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">Revenue+ (12 Months)${locationLabel}</h3>
                     
                     <svg width="${chartWidth}" height="${chartHeight}" style="display: block;">
                         <!-- Grid lines -->
@@ -7128,7 +7299,8 @@ RWC Events Expected:
 • Wednesday events 
 • Thursday events
 
-Averages based on all similar events from June forward.
+Averages based on June, July, and August events only.
+Average derived from all events June and forward.
 Hover over individual metrics for detailed averages.`)}
                     </div>
                     
@@ -7683,7 +7855,7 @@ Hover over individual metrics for detailed averages.`)}
         function calculateEventTypeAverages() {
             // Calculate averages from June forward for each event type
             const events = window.VanguardData.getAllEvents();
-            const juneStart = new Date(2024, 5, 1); // June 1, 2024
+            const juneStart = new Date(2025, 5, 1); // June 1, 2025
             
             const eventTypeAverages = {};
             const eventTypeCounts = {};
@@ -8079,16 +8251,24 @@ Hover over individual metrics for detailed averages.`)}
         
         function createProjectionColumn(lastMonth) {
             // Check if we need projection for this month
-            if (!lastMonth.events || lastMonth.events.length === 0) return null;
+            if (!lastMonth.events || lastMonth.events.length === 0) {
+                console.log('[PROJECTION] No events in month - skipping projection');
+                return null;
+            }
             
             // Parse month to get date range
             const monthKey = lastMonth.key; // Format: "2024-08"
             console.log(`[PROJECTION] Creating projection for month: ${monthKey}, location: ${reportingLocationFilter}`);
             console.log(`[PROJECTION] Month has ${lastMonth.events.length} existing events`);
+            console.log(`[PROJECTION] Today's date: ${new Date().toLocaleDateString()}`);
             const missingEvents = getMissingEventsForMonth(monthKey, lastMonth.events, reportingLocationFilter);
             
             // If no missing events, no projection needed
-            if (missingEvents.length === 0) return null;
+            if (missingEvents.length === 0) {
+                console.log('[PROJECTION] No missing events found - no projection column created');
+                return null;
+            }
+            console.log(`[PROJECTION] Found ${missingEvents.length} missing events, creating projection column`);
             
             // Get the event type averages for tooltips
             const eventTypeAverages = calculateEventTypeAverages();
@@ -8110,7 +8290,8 @@ Hover over individual metrics for detailed averages.`)}
                 
                 const projectedCount = missingEvents.filter(e => relevantTypes.includes(e.type)).length;
                 content += `Total projected events: ${projectedCount}\n`;
-                content += `Based on events from June forward`;
+                content += `Based on June, July, and August events\n`;
+                content += `Average derived from all events June and forward`;
                 
                 return content;
             };
@@ -8160,7 +8341,8 @@ RWC Events Expected:
 • Wednesday events
 • Thursday events
 
-Averages based on all similar events from June forward.
+Averages based on June, July, and August events only.
+Average derived from all events June and forward.
 Hover over individual metrics for detailed averages.`)}
                     </div>
                     
@@ -10268,6 +10450,71 @@ Hover over individual metrics for detailed averages.`)}
             document.body.appendChild(updateBar);
         };
         
+        // Show v1.1.4 specific update prompt
+        window.showV114UpdatePrompt = function() {
+            const popup = document.createElement('div');
+            popup.className = 'update-popup';
+            popup.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.9);
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                z-index: 10000;
+                text-align: center;
+                opacity: 0;
+                transition: all 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            popup.innerHTML = `
+                <h2 style="margin-bottom: 15px; font-size: 24px;">🎉 Version 1.1.4 Available!</h2>
+                <div style="margin-bottom: 20px; text-align: left; font-size: 14px; line-height: 1.6;">
+                    <strong>What's New:</strong><br>
+                    • Added RPA metrics to product boxes<br>
+                    • RPA breakdown by Flash & Strip products<br>
+                    • Fixed projection date calculations for 2025<br>
+                    • Improved tooltip accuracy<br>
+                    • Enhanced product performance tracking
+                </div>
+                <button onclick="this.parentElement.style.display='none'; location.reload();" style="
+                    background: white;
+                    color: #2563eb;
+                    border: none;
+                    padding: 10px 30px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    margin-right: 10px;
+                ">Update Now</button>
+                <button onclick="this.parentElement.remove(); localStorage.setItem('v114_update_seen', 'true');" style="
+                    background: transparent;
+                    color: white;
+                    border: 2px solid white;
+                    padding: 10px 30px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    cursor: pointer;
+                ">Later</button>
+            `;
+            
+            document.body.appendChild(popup);
+            
+            // Trigger animation
+            setTimeout(() => {
+                popup.style.opacity = '1';
+                popup.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 10);
+            
+            // Mark as seen if they don't click
+            localStorage.setItem('v114_update_seen', 'true');
+        };
+        
         // Show error popup
         function showErrorPopup(message) {
             const popup = document.getElementById('errorPopup');
@@ -10332,6 +10579,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize sound system
     AppSounds.init();
+    
+    // Show v1.1.4 update notification if not already seen
+    if (!localStorage.getItem('v114_update_seen')) {
+        setTimeout(() => {
+            showV114UpdatePrompt();
+        }, 2000);
+    }
     
     // Add sounds to ALL interactive elements
     setTimeout(() => {

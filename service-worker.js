@@ -1,7 +1,7 @@
 // Service Worker for Vanguard Bingo Analytics PWA
-const VERSION = '1.1.2'; // Version 1.1.2 - Fixed infinite reload loop
+const VERSION = '1.1.4'; // Version 1.1.4 - Added RPA to product boxes, fixed projection dates for 2025
 const CACHE_NAME = `vanguard-v${VERSION}`;
-const DATA_CACHE_NAME = 'vanguard-data-v1.1.2'; // Force data refresh with version update
+const DATA_CACHE_NAME = 'vanguard-data-v1.1.4'; // Force refresh for new version // Force data refresh with version update
 
 // Files to cache for offline use - using relative paths for GitHub Pages
 const urlsToCache = [
