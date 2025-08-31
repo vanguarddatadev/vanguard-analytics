@@ -1398,6 +1398,51 @@
             }
         }
         
+        @keyframes glowGold {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 
+                           0 0 40px rgba(255, 215, 0, 0.5), 
+                           0 0 60px rgba(255, 215, 0, 0.3), 
+                           inset 0 0 15px rgba(255, 215, 0, 0.15);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 215, 0, 1), 
+                           0 0 50px rgba(255, 215, 0, 0.7), 
+                           0 0 70px rgba(255, 215, 0, 0.5), 
+                           inset 0 0 20px rgba(255, 215, 0, 0.25);
+            }
+        }
+        
+        @keyframes glowSilver {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(192, 192, 192, 0.8), 
+                           0 0 30px rgba(192, 192, 192, 0.5), 
+                           0 0 45px rgba(192, 192, 192, 0.3), 
+                           inset 0 0 12px rgba(192, 192, 192, 0.15);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(192, 192, 192, 1), 
+                           0 0 40px rgba(192, 192, 192, 0.7), 
+                           0 0 55px rgba(192, 192, 192, 0.5), 
+                           inset 0 0 17px rgba(192, 192, 192, 0.25);
+            }
+        }
+        
+        @keyframes glowBronze {
+            0%, 100% {
+                box-shadow: 0 0 12px rgba(205, 127, 50, 0.8), 
+                           0 0 25px rgba(205, 127, 50, 0.5), 
+                           0 0 35px rgba(205, 127, 50, 0.3), 
+                           inset 0 0 10px rgba(205, 127, 50, 0.15);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(205, 127, 50, 1), 
+                           0 0 35px rgba(205, 127, 50, 0.7), 
+                           0 0 45px rgba(205, 127, 50, 0.5), 
+                           inset 0 0 15px rgba(205, 127, 50, 0.25);
+            }
+        }
+        
         @keyframes slideDown {
             0% {
                 opacity: 0;
@@ -1522,6 +1567,17 @@
             opacity: 1 !important;
             visibility: visible !important;
         }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
     </style>
     <script>
         // Sound System
@@ -1556,6 +1612,44 @@
                     case 'event':
                         this.playCasinoChip();
                         break;
+                    case 'shuffle':
+                        this.playCardShuffle();
+                        break;
+                }
+            },
+            
+            playCardShuffle() {
+                // Multiple quick overlapping swoosh sounds to simulate card shuffling
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+                        const filter = this.audioContext.createBiquadFilter();
+                        
+                        filter.type = 'bandpass';
+                        filter.frequency.value = 800 + Math.random() * 400;
+                        filter.Q.value = 2;
+                        
+                        osc.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(this.audioContext.destination);
+                        
+                        osc.type = 'noise';
+                        // Create noise by using multiple oscillators with random frequencies
+                        const noise = this.audioContext.createOscillator();
+                        noise.type = 'sawtooth';
+                        noise.frequency.value = Math.random() * 2000 + 500;
+                        noise.connect(filter);
+                        
+                        gain.gain.value = this.volume * 0.08;
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.15);
+                        
+                        osc.frequency.value = Math.random() * 200 + 100;
+                        osc.start();
+                        noise.start();
+                        osc.stop(this.audioContext.currentTime + 0.15);
+                        noise.stop(this.audioContext.currentTime + 0.15);
+                    }, i * 30);
                 }
             },
             
@@ -1849,13 +1943,18 @@
         <div class="nav-brand">
             <img src="./vanguard_logo.png" alt="Vanguard" style="height: 65px; margin-right: 18px; vertical-align: middle;">
             <span style="vertical-align: middle; font-size: 22px; font-weight: 600;">Bingo Analytics</span>
-            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.1.4</span>
+            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.5</span>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
             <div class="nav-tabs">
                 <button class="nav-tab active" onclick="switchView('events')">Events</button>
                 <!-- <button class="nav-tab" onclick="switchView('month-over-month')">Monthly</button> -->
                 <button class="nav-tab" onclick="switchView('reporting')">Reporting</button>
+                <button class="nav-tab" onclick="switchView('leaderboard')">Leaderboard</button>
+                <button class="nav-tab" onclick="switchView('notifications')" style="position: relative;">
+                    Notifications
+                    <span id="notificationBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 600;">0</span>
+                </button>
                 <button class="nav-tab" onclick="switchView('data')">Data</button>
             </div>
             <button id="installButton" onclick="installPWA()" style="display: none; padding: 6px 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;" title="Install as app">📱 Install</button>
@@ -1886,19 +1985,32 @@
                 
                 <!-- ROW 2: Event Title & Metadata LEFT | Comparison Controls RIGHT -->
                 <div class="header-row-2">
-                    <!-- LEFT: Event Title and Metadata -->
-                    <div class="event-info-section">
-                        <div class="visual-event-title">Loading...</div>
-                        <div class="visual-event-meta">
-                            <span class="visual-meta-item">
-                                <span class="icon">📅</span> <span class="meta-value">-</span>
-                            </span>
-                            <span class="visual-meta-item">
-                                <span class="icon">🕐</span> <span class="meta-value">-</span>
-                            </span>
-                            <span class="visual-meta-item">
-                                <span class="icon">📍</span> <span class="meta-value">-</span>
-                            </span>
+                    <!-- LEFT: Event Title and Metadata with Notes -->
+                    <div style="display: flex; gap: 20px; align-items: flex-start; flex: 1;">
+                        <div class="event-info-section">
+                            <div class="visual-event-title">Loading...</div>
+                            <div class="visual-event-meta">
+                                <span class="visual-meta-item">
+                                    <span class="icon">📅</span> <span class="meta-value">-</span>
+                                </span>
+                                <span class="visual-meta-item">
+                                    <span class="icon">🕐</span> <span class="meta-value">-</span>
+                                </span>
+                                <span class="visual-meta-item">
+                                    <span class="icon">📍</span> <span class="meta-value">-</span>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Event Notes Section - Right of Event Info -->
+                        <div style="display: flex; gap: 10px; font-size: 11px;">
+                            <div style="padding: 8px 12px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 4px; min-width: 180px;">
+                                <div style="color: #6b7280; font-size: 9px; text-transform: uppercase; margin-bottom: 3px;">Notes for Event</div>
+                                <div id="eventNotes" style="color: #1e293b; font-size: 12px;">-</div>
+                            </div>
+                            <div style="padding: 8px 12px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 4px; min-width: 180px;">
+                                <div style="color: #6b7280; font-size: 9px; text-transform: uppercase; margin-bottom: 3px;">Promotion Notes</div>
+                                <div id="promotionNotes" style="color: #1e293b; font-size: 12px;">-</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -2525,6 +2637,163 @@ Pool: Shows the number of historical events that match all your selected filters
         </div>
     </div><!-- End Data View -->
 
+    <!-- Leaderboard View -->
+    <div id="leaderboard-view" class="view-container" style="display: none;">
+        <div class="container" style="padding: 20px;">
+            <!-- Filter Controls -->
+            <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin: 0;">Event Leaderboard</h2>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <!-- Share via Email Button -->
+                        <button id="shareLeaderboard" onclick="window.LeaderboardManager.shareLeaderboard()" 
+                                style="background: linear-gradient(135deg, #86efac, #22c55e); color: white; 
+                                       padding: 8px 16px; border: none; border-radius: 6px; 
+                                       font-size: 13px; font-weight: 600; cursor: pointer; 
+                                       display: flex; align-items: center; gap: 6px;
+                                       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                       transition: all 0.2s;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            Share via Email
+                        </button>
+                        <!-- Aspect Selector -->
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 13px; color: #64748b; font-weight: 500;">Ranking By:</label>
+                            <select id="leaderboardAspect" onchange="AppSounds.play('shuffle'); window.LeaderboardManager.animateAndUpdate()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: white; cursor: pointer;">
+                                <option value="rpa">RPA</option>
+                                <option value="flashRPA">Flash RPA</option>
+                                <option value="stripRPA">Strip RPA</option>
+                                <option value="margin">Margin</option>
+                                <option value="flashMargin">Flash Margin</option>
+                                <option value="stripMargin">Strip Margin</option>
+                                <option value="totalSales">Gross Revenue</option>
+                                <option value="netSales">Net Revenue</option>
+                                <option value="attendance">Attendance</option>
+                                <option value="strips">Strip Sales</option>
+                                <option value="flash">Flash Sales</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Comparison Filters (copied from Events) -->
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                    <!-- Period Selection -->
+                    <div style="display: flex; gap: 8px;">
+                        <button class="period-btn active" data-period="1M" onclick="window.LeaderboardManager.setPeriod('1M')">1M</button>
+                        <button class="period-btn" data-period="3M" onclick="window.LeaderboardManager.setPeriod('3M')">3M</button>
+                        <button class="period-btn" data-period="1Y" onclick="window.LeaderboardManager.setPeriod('1Y')">1Y</button>
+                        <button class="period-btn" data-period="ALL" onclick="window.LeaderboardManager.setPeriod('ALL')">ALL</button>
+                    </div>
+                    
+                    
+                    <!-- Location Filter -->
+                    <div style="display: flex; gap: 8px;">
+                        <label style="font-size: 13px; color: #64748b; align-self: center;">Location:</label>
+                        <button class="location-btn active" onclick="window.LeaderboardManager.setLocation('combined')">Combined</button>
+                        <button class="location-btn" onclick="window.LeaderboardManager.setLocation('SC')">SC</button>
+                        <button class="location-btn" onclick="window.LeaderboardManager.setLocation('RWC')">RWC</button>
+                    </div>
+                    
+                    <!-- Day Multi-Select -->
+                    <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 8px;">
+                        <!-- Check/Uncheck All Buttons -->
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <label style="font-size: 13px; color: #64748b; margin-right: 10px;">Days:</label>
+                            <button onclick="window.LeaderboardManager.checkAllDays()" 
+                                    style="padding: 3px 8px; font-size: 11px; background: #3b82f6; color: white; 
+                                           border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                                Check All
+                            </button>
+                            <button onclick="window.LeaderboardManager.uncheckAllDays()" 
+                                    style="padding: 3px 8px; font-size: 11px; background: #64748b; color: white; 
+                                           border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                                Uncheck All
+                            </button>
+                        </div>
+                        
+                        <!-- Day Checkboxes -->
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="dayMon" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Mon</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="dayTue" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Tue</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="dayWed" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Wed</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="dayThu" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Thu</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="dayFri" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Fri</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="daySatEarly" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Sat Early</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="daySatLate" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Sat Late</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="daySunEarly" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Sun Early</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="daySunLate" onchange="window.LeaderboardManager.updateDayFilter()">
+                                <span style="font-size: 12px;">Sun Late</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Event Pool Counter (25% smaller) -->
+                    <div style="margin-left: auto; padding: 6px 12px; background: #f1f5f9; border-radius: 6px;">
+                        <span style="font-size: 10.5px; color: #475569; font-weight: 500;">
+                            Event Pool: <span id="eventPoolCount" style="font-weight: 700; color: #1e293b;">0</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top 10 Events Display -->
+            <div id="leaderboardContent" style="display: flex; flex-direction: column; gap: 0;">
+                <!-- Events will be populated here -->
+            </div>
+        </div>
+    </div><!-- End Leaderboard View -->
+
+    <!-- Notifications View (Placeholder) -->
+    <div id="notifications-view" class="view-container" style="display: none;">
+        <div class="container" style="padding: 20px; max-width: 900px; margin: 0 auto;">
+            <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 25px;">
+                    Notifications
+                    <span id="notificationCount" style="font-size: 14px; color: #64748b; font-weight: 400; margin-left: 10px;"></span>
+                </h2>
+                
+                <div id="notificationsList" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Notifications will be populated here -->
+                </div>
+                
+                <div id="noNotifications" style="text-align: center; padding: 40px; display: none;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
+                    <p style="color: #64748b; font-size: 16px;">No notifications yet</p>
+                    <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">Important updates and alerts will appear here</p>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Notifications View -->
+
     <script>
         // ============================================================
         // VANGUARD BINGO ANALYTICS - CODE ORGANIZATION MAP
@@ -2716,10 +2985,11 @@ Pool: Shows the number of historical events that match all your selected filters
                 let scProcessed = 0;
                 let rwcProcessed = 0;
                 
-                // Get SC events (matching original JS logic)
+                // Get SC events - rightmost columns are newest
                 if (this.data?.sc?.columns) {
-                    console.log('Processing SC columns:', this.data.sc.columns.length);
-                    this.data.sc.columns.forEach(col => {
+                    // console.log('Processing SC columns:', this.data.sc.columns.length);
+                    // Process columns as they come (left to right in spreadsheet)
+                    this.data.sc.columns.forEach((col, index) => {
                         const dateHeader = col.header;
                         
                         // Skip average/total columns that don't represent actual events
@@ -2795,6 +3065,32 @@ Pool: Shows the number of historical events that match all your selected filters
                                 : cleanDay || 'Unknown';
                             
                             scProcessed++;
+                            // Generate ID like BingoEvent does
+                            // Extract date in M/D/YYYY format from dateValue or dateHeader
+                            let idDateStr = '';
+                            if (dateValue && typeof dateValue === 'string' && dateValue.includes('/')) {
+                                // Already in M/D/YYYY format
+                                idDateStr = dateValue.replace(/\//g, '-');
+                            } else if (dateHeader && typeof dateHeader === 'string') {
+                                // Try to extract date from full date string
+                                const dateMatch = dateHeader.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                                if (dateMatch) {
+                                    idDateStr = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+                                } else {
+                                    // Parse the date object string
+                                    const tempDate = new Date(dateHeader);
+                                    if (!isNaN(tempDate.getTime())) {
+                                        const m = tempDate.getMonth() + 1;
+                                        const d = tempDate.getDate();
+                                        const y = tempDate.getFullYear();
+                                        idDateStr = `${m}-${d}-${y}`;
+                                    } else {
+                                        idDateStr = String(dateHeader).replace(/\//g, '-').split(' ')[0];
+                                    }
+                                }
+                            }
+                            const eventId = `SC-${idDateStr}-${isLate ? 'L' : 'D'}`;
+                            
                             const scEvent = {
                                 location: 'SC',
                                 date: dateHeader,
@@ -2803,7 +3099,8 @@ Pool: Shows the number of historical events that match all your selected filters
                                 isLate: isLate,
                                 columnIndex: col.index,
                                 index: col.index,  // For compatibility
-                                columnData: col.data
+                                columnData: col.data,
+                                id: eventId  // Add the ID
                             };
                             
                             // Log SC events with day issues
@@ -2820,13 +3117,13 @@ Pool: Shows the number of historical events that match all your selected filters
                             events.push(scEvent);
                         }
                     });
-                    console.log(`SC: Processed ${scProcessed} events from ${this.data.sc.columns.length} columns (skipped ${skippedColumns})`);
+                    // console.log(`SC: Processed ${scProcessed} events from ${this.data.sc.columns.length} columns (skipped ${skippedColumns})`);
                 }
                 
                 // Get RWC events (same logic)
                 let rwcSkipped = 0;
                 if (this.data?.rwc?.columns) {
-                    console.log('Processing RWC columns:', this.data.rwc.columns.length);
+                    // console.log('Processing RWC columns:', this.data.rwc.columns.length);
                     this.data.rwc.columns.forEach(col => {
                         const dateHeader = col.header;
                         
@@ -2903,6 +3200,32 @@ Pool: Shows the number of historical events that match all your selected filters
                                 : cleanDay || 'Unknown';
                             
                             rwcProcessed++;
+                            // Generate ID like BingoEvent does
+                            // Extract date in M/D/YYYY format from dateValue or dateHeader
+                            let idDateStr = '';
+                            if (dateValue && typeof dateValue === 'string' && dateValue.includes('/')) {
+                                // Already in M/D/YYYY format
+                                idDateStr = dateValue.replace(/\//g, '-');
+                            } else if (dateHeader && typeof dateHeader === 'string') {
+                                // Try to extract date from full date string
+                                const dateMatch = dateHeader.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                                if (dateMatch) {
+                                    idDateStr = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+                                } else {
+                                    // Parse the date object string
+                                    const tempDate = new Date(dateHeader);
+                                    if (!isNaN(tempDate.getTime())) {
+                                        const m = tempDate.getMonth() + 1;
+                                        const d = tempDate.getDate();
+                                        const y = tempDate.getFullYear();
+                                        idDateStr = `${m}-${d}-${y}`;
+                                    } else {
+                                        idDateStr = String(dateHeader).replace(/\//g, '-').split(' ')[0];
+                                    }
+                                }
+                            }
+                            const eventId = `RWC-${idDateStr}-${isLate ? 'L' : 'D'}`;
+                            
                             const rwcEvent = {
                                 location: 'RWC',
                                 date: dateHeader,
@@ -2911,7 +3234,8 @@ Pool: Shows the number of historical events that match all your selected filters
                                 isLate: isLate,
                                 columnIndex: col.index,
                                 index: col.index,  // For compatibility
-                                columnData: col.data
+                                columnData: col.data,
+                                id: eventId  // Add the ID
                             };
                             
                             // Log RWC events with day issues
@@ -2928,27 +3252,59 @@ Pool: Shows the number of historical events that match all your selected filters
                             events.push(rwcEvent);
                         }
                     });
-                    console.log(`RWC: Processed ${rwcProcessed} events from ${this.data.rwc.columns.length} columns (skipped ${rwcSkipped})`);
+                    // console.log(`RWC: Processed ${rwcProcessed} events from ${this.data.rwc.columns.length} columns (skipped ${rwcSkipped}`);
                 }
                 
-                // Sort by date (most recent first) - events might be in wrong order
+                // Sort by date (most recent first) - rightmost columns are newest
                 events.sort((a, b) => {
-                    const dateA = new Date(a.dateValue);
-                    const dateB = new Date(b.dateValue);
+                    // Parse dates from the date field (M/D/YYYY format)
+                    const parseEventDate = (event) => {
+                        const dateStr = event.date || event.dateValue;
+                        if (!dateStr) return new Date(0);
+                        
+                        // Handle M/D/YYYY format
+                        const parts = String(dateStr).split('/');
+                        if (parts.length === 3) {
+                            // Month is 0-indexed in JavaScript Date
+                            // Year, Month (0-indexed), Day
+                            const year = parseInt(parts[2]);
+                            const month = parseInt(parts[0]) - 1;
+                            const day = parseInt(parts[1]);
+                            return new Date(year, month, day);
+                        }
+                        
+                        // Fallback to direct parsing
+                        return new Date(dateStr);
+                    };
+                    
+                    const dateA = parseEventDate(a);
+                    const dateB = parseEventDate(b);
+                    
+                    // Sort newest first (rightmost columns have the most recent dates)
                     return dateB - dateA;
                 });
                 
-                console.log(`TOTAL: Returning ${events.length} events (SC: ${events.filter(e => e.location === 'SC').length}, RWC: ${events.filter(e => e.location === 'RWC').length})`);
+                // console.log(`TOTAL: Returning ${events.length} events (SC: ${events.filter(e => e.location === 'SC').length}, RWC: ${events.filter(e => e.location === 'RWC').length})`);
                 
-                // Log first few events to verify data structure
+                // Log first few events to verify data structure and sorting
                 if (events.length > 0) {
-                    console.log('Sample events:', events.slice(0, 3).map(e => ({
+                    /* console.log('First 3 events after sorting (should be newest first):', events.slice(0, 3).map(e => ({
                         location: e.location,
                         date: e.date,
                         dateValue: e.dateValue,
                         day: e.day,
+                        id: e.id,
+                        margin: e.margin,
                         hasData: !!e.columnData
-                    })));
+                    }))); */
+                    // console.log('LATEST EVENT should be:', events[0].location, events[0].day, events[0].date);
+                    
+                    // Debug: Check the last few events to see if they're the oldest
+                    /* console.log('Last 3 events (should be oldest):', events.slice(-3).map(e => ({
+                        location: e.location,
+                        date: e.date,
+                        day: e.day
+                    }))); */
                 }
                 
                 return events;
@@ -3035,12 +3391,21 @@ Pool: Shows the number of historical events that match all your selected filters
                             // Save to cache
                             if (data) {
                                 this.data = data;
-                                const cacheData = {
-                                    data: data,
-                                    timestamp: Date.now()
-                                };
-                                localStorage.setItem('vanguard_data_cache', JSON.stringify(cacheData));
-                                console.log('Data fetched and cached successfully');
+                                // Try to cache the data, but don't fail if quota exceeded
+                                try {
+                                    const cacheData = {
+                                        data: data,
+                                        timestamp: Date.now()
+                                    };
+                                    localStorage.setItem('vanguard_data_cache', JSON.stringify(cacheData));
+                                    console.log('Data cached successfully');
+                                } catch (e) {
+                                    if (e.name === 'QuotaExceededError') {
+                                        console.warn('Storage quota exceeded - clearing cache and continuing');
+                                        localStorage.removeItem('vanguard_data_cache');
+                                        localStorage.removeItem('vanguard_last_check');
+                                    }
+                                }
                                 
                                 // Don't reload - let the caller handle initialization
                                 // location.reload() removed to prevent infinite loop
@@ -3184,14 +3549,14 @@ Pool: Shows the number of historical events that match all your selected filters
                 }
                 
                 // Debug margin calculation
-                console.log('Event margin calc:', {
+                /* console.log('Event margin calc:', {
                     event: this.id,
                     totalSales: this.totalSales,
                     payouts: this.totalPayouts,
                     netSales: this.netSales,
                     marginFromNet: (this.netSales / this.totalSales * 100).toFixed(2),
                     marginFromCalc: ((this.totalSales - this.totalPayouts) / this.totalSales * 100).toFixed(2)
-                });
+                }); */
                 
                 // Calculated metrics
                 this.margin = this.totalSales > 0 ? (this.netSales / this.totalSales * 100) : 0;
@@ -3323,7 +3688,7 @@ Pool: Shows the number of historical events that match all your selected filters
                     
                     // Log Thursday events specifically
                     if (dayKey.toLowerCase().includes('thu')) {
-                        console.log('RWC Thursday found:', event.date, event.day, event.dayInfo);
+                        // console.log('RWC Thursday found:', event.date, event.day, event.dayInfo);
                     }
                 }
             }
@@ -3368,13 +3733,13 @@ Pool: Shows the number of historical events that match all your selected filters
                     const olderEvent = locationEvents[i];
                     // Check if this older event had a hotball hit (negative row 35)
                     if (olderEvent.hotballChange < 0) {
-                        console.log(`Events since hotball for ${event.date}: ${count} (hit on ${olderEvent.date})`);
+                        // console.log(`Events since hotball for ${event.date}: ${count} (hit on ${olderEvent.date})`);
                         return count; // Found when hotball was last hit
                     }
                     count++;
                 }
                 
-                console.log(`Events since hotball for ${event.date}: ${count}+ (never hit)`);
+                // console.log(`Events since hotball for ${event.date}: ${count}+ (never hit)`);
                 return count; // Never hit in recorded history
             }
             
@@ -3536,7 +3901,7 @@ Pool: Shows the number of historical events that match all your selected filters
                     return event;
                 }
                 
-                console.error('Event not found:', eventIdentifier);
+                // console.error('Event not found:', eventIdentifier);
                 return null;
             }
             
@@ -3573,16 +3938,16 @@ Pool: Shows the number of historical events that match all your selected filters
                 if (!event) return;
                 
                 // Debug: Let's see what values we're getting
-                console.log('=== HOTBALL DEBUG ===');
+                // console.log('=== HOTBALL DEBUG ===');
                 console.log('Event:', event.id, event.getDisplayName());
-                console.log('Row 35 (hotballChange):', event.hotballChange);
-                console.log('Row 36 (hotballTotal):', event.hotballTotal);
-                console.log('Raw Row 35:', event.getRowValue(35));
-                console.log('Raw Row 36:', event.getRowValue(36));
+                // console.log('Row 35 (hotballChange):', event.hotballChange);
+                // console.log('Row 36 (hotballTotal):', event.hotballTotal);
+                // console.log('Raw Row 35:', event.getRowValue(35));
+                // console.log('Raw Row 36:', event.getRowValue(36));
                 
                 // Use Row 36 directly as the Hotball Total (no adjustments needed)
                 let adjustedHotballTotal = event.hotballTotal;
-                console.log('Hotball Total from row 36:', adjustedHotballTotal);
+                // console.log('Hotball Total from row 36:', adjustedHotballTotal);
                 
                 // Update Hotball value with ADJUSTED total
                 const hotballValueEl = document.getElementById('hotballValue');
@@ -3669,6 +4034,19 @@ Pool: Shows the number of historical events that match all your selected filters
                     metaEls[0].textContent = dateStr;
                     metaEls[1].textContent = event.isLate ? 'Late Session' : 'Regular Session';
                     metaEls[2].textContent = event.location === 'SC' ? 'Santa Clara' : 'Redwood City';
+                }
+                
+                // Update event notes from rows 59, 60
+                const eventNotesEl = document.getElementById('eventNotes');
+                const promotionNotesEl = document.getElementById('promotionNotes');
+                
+                if (eventNotesEl) {
+                    const notes = event.getRowValue ? event.getRowValue(59) : null;
+                    eventNotesEl.textContent = notes || '-';
+                }
+                if (promotionNotesEl) {
+                    const promoNotes = event.getRowValue ? event.getRowValue(60) : null;
+                    promotionNotesEl.textContent = promoNotes || '-';
                 }
                 
                 // Update spotlight metrics
@@ -4102,7 +4480,7 @@ Pool: Shows the number of historical events that match all your selected filters
                 
                 // Store the comparison pool for use by product boxes
                 this.comparisonEvents = pool;
-                console.log('[DEBUG] Updated comparison pool with', pool.length, 'events');
+                // console.log('[DEBUG] Updated comparison pool with', pool.length, 'events');
                 
                 // Update pool counter
                 const poolCounter = document.getElementById('comparisonPoolCount');
@@ -4408,6 +4786,1537 @@ Pool: Shows the number of historical events that match all your selected filters
         
         // Create global EventManager instance
         window.EventManager = new EventManager();
+        
+        // ============================================================
+        // LEADERBOARD MANAGER - Handles leaderboard view functionality
+        // ============================================================
+        class LeaderboardManager {
+            constructor() {
+                this.period = 'ALL'; // Default to all time
+                this.location = 'SC'; // Will be set from last event
+                this.aspect = 'rpa';
+                this.selectedDays = {
+                    Mon: false,
+                    Tue: false,
+                    Wed: false,
+                    Thu: false,
+                    Fri: false,
+                    SatEarly: false,
+                    SatLate: false,
+                    SunEarly: false,
+                    SunLate: false
+                };
+                this.filteredEvents = [];
+                this.topEvents = [];
+                this.initialized = false;
+            }
+            
+            initialize() {
+                console.log('Initializing LeaderboardManager');
+                // Always re-check the last event when switching to leaderboard view
+                this.initializeFromLastEvent();
+                if (!this.initialized) {
+                    this.initialized = true;
+                }
+                // Don't animate on initial load - just update
+                this.updateLeaderboard();
+            }
+            
+            initializeFromLastEvent() {
+                // Get the latest event to set defaults
+                if (window.VanguardData) {
+                    const events = window.VanguardData.getAllEvents();
+                    // console.log('Initializing from last event. Total events:', events.length);
+                    
+                    if (events && events.length > 0) {
+                        // Events are already sorted by date (newest first)
+                        const lastEvent = events[0];
+                        console.log('Last event details:', {
+                            location: lastEvent.location,
+                            day: lastEvent.day,
+                            dayInfo: lastEvent.dayInfo,
+                            isLate: lastEvent.isLate,
+                            date: lastEvent.date,
+                            id: lastEvent.id
+                        });
+                        
+                        // Set location based on last event (SC or RWC)
+                        this.location = lastEvent.location || 'SC';
+                        
+                        // Reset all days first
+                        Object.keys(this.selectedDays).forEach(key => {
+                            this.selectedDays[key] = false;
+                        });
+                        
+                        // Set only the day of the last event to checked
+                        let day = lastEvent.day;
+                        const isLate = lastEvent.isLate;
+                        
+                        // Clean up day string - handle various formats
+                        if (day) {
+                            day = day.trim();
+                            // Remove any (Late) suffix if present
+                            if (day.includes('(Late)')) {
+                                day = day.replace('(Late)', '').trim();
+                            }
+                        }
+                        
+                        console.log('Setting day from last event - Raw day:', lastEvent.day, 'Cleaned day:', day, 'isLate:', isLate);
+                        
+                        // Match the exact day - case insensitive
+                        const dayLower = day ? day.toLowerCase() : '';
+                        
+                        if (dayLower === 'monday' || dayLower === 'mon') {
+                            this.selectedDays.Mon = true;
+                            console.log('Selected Monday');
+                        } else if (dayLower === 'tuesday' || dayLower === 'tue') {
+                            this.selectedDays.Tue = true;
+                            console.log('Selected Tuesday');
+                        } else if (dayLower === 'wednesday' || dayLower === 'wed') {
+                            this.selectedDays.Wed = true;
+                            console.log('Selected Wednesday');
+                        } else if (dayLower === 'thursday' || dayLower === 'thu') {
+                            this.selectedDays.Thu = true;
+                            console.log('Selected Thursday');
+                        } else if (dayLower === 'friday' || dayLower === 'fri') {
+                            this.selectedDays.Fri = true;
+                            console.log('Selected Friday');
+                        } else if ((dayLower === 'saturday' || dayLower === 'sat') && !isLate) {
+                            this.selectedDays.SatEarly = true;
+                            console.log('Selected Saturday Early');
+                        } else if ((dayLower === 'saturday' || dayLower === 'sat') && isLate) {
+                            this.selectedDays.SatLate = true;
+                            console.log('Selected Saturday Late');
+                        } else if ((dayLower === 'sunday' || dayLower === 'sun') && !isLate) {
+                            this.selectedDays.SunEarly = true;
+                            console.log('Selected Sunday Early');
+                        } else if ((dayLower === 'sunday' || dayLower === 'sun') && isLate) {
+                            this.selectedDays.SunLate = true;
+                            console.log('Selected Sunday Late');
+                        } else {
+                            console.warn('Day not matched:', day, 'Setting Friday as default');
+                            this.selectedDays.Fri = true;
+                        }
+                        
+                        // If no day was matched (shouldn't happen), select all days as fallback
+                        const anyDaySelected = Object.values(this.selectedDays).some(v => v === true);
+                        if (!anyDaySelected) {
+                            console.warn('No day matched from last event, selecting all days');
+                            Object.keys(this.selectedDays).forEach(key => {
+                                this.selectedDays[key] = true;
+                            });
+                        }
+                        
+                        console.log('Selected days after initialization:', this.selectedDays);
+                        
+                        // Update the UI to reflect these defaults
+                        this.updateUIFromState();
+                    } else {
+                        // No events available, select all days as default
+                        console.log('No events available, using default settings');
+                        Object.keys(this.selectedDays).forEach(key => {
+                            this.selectedDays[key] = true;
+                        });
+                        this.updateUIFromState();
+                    }
+                }
+            }
+            
+            updateUIFromState() {
+                // Update location buttons
+                document.querySelectorAll('#leaderboard-view .location-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if ((btn.textContent === 'SC' && this.location === 'SC') ||
+                        (btn.textContent === 'RWC' && this.location === 'RWC') ||
+                        (btn.textContent === 'Combined' && this.location === 'combined')) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update period buttons
+                document.querySelectorAll('#leaderboard-view .period-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if ((btn.textContent === '1M' && this.period === '1M') ||
+                        (btn.textContent === '3M' && this.period === '3M') ||
+                        (btn.textContent === '1Y' && this.period === '1Y') ||
+                        (btn.textContent === 'ALL' && this.period === 'ALL')) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update day checkboxes
+                document.getElementById('dayMon').checked = this.selectedDays.Mon;
+                document.getElementById('dayTue').checked = this.selectedDays.Tue;
+                document.getElementById('dayWed').checked = this.selectedDays.Wed;
+                document.getElementById('dayThu').checked = this.selectedDays.Thu;
+                document.getElementById('dayFri').checked = this.selectedDays.Fri;
+                document.getElementById('daySatEarly').checked = this.selectedDays.SatEarly;
+                document.getElementById('daySatLate').checked = this.selectedDays.SatLate;
+                document.getElementById('daySunEarly').checked = this.selectedDays.SunEarly;
+                document.getElementById('daySunLate').checked = this.selectedDays.SunLate;
+            }
+            
+            checkAllDays() {
+                AppSounds.play('shuffle'); // Play shuffle sound
+                Object.keys(this.selectedDays).forEach(key => {
+                    this.selectedDays[key] = true;
+                });
+                this.updateUIFromState();
+                this.animateAndUpdate();
+            }
+            
+            uncheckAllDays() {
+                AppSounds.play('shuffle'); // Play shuffle sound
+                Object.keys(this.selectedDays).forEach(key => {
+                    this.selectedDays[key] = false;
+                });
+                this.updateUIFromState();
+                this.animateAndUpdate();
+            }
+            
+            setPeriod(period) {
+                AppSounds.play('shuffle'); // Play shuffle sound
+                this.period = period;
+                // Update button states
+                document.querySelectorAll('#leaderboard-view .period-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.period === period) {
+                        btn.classList.add('active');
+                    }
+                });
+                this.animateAndUpdate();
+            }
+            
+            setLocation(location) {
+                AppSounds.play('shuffle'); // Play shuffle sound
+                this.location = location;
+                // Update button states
+                document.querySelectorAll('#leaderboard-view .location-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if ((btn.textContent === 'Combined' && location === 'combined') ||
+                        (btn.textContent === location)) {
+                        btn.classList.add('active');
+                    }
+                });
+                this.animateAndUpdate();
+            }
+            
+            updateDayFilter() {
+                AppSounds.play('shuffle'); // Play shuffle sound
+                // Read checkbox states
+                this.selectedDays = {
+                    Mon: document.getElementById('dayMon').checked,
+                    Tue: document.getElementById('dayTue').checked,
+                    Wed: document.getElementById('dayWed').checked,
+                    Thu: document.getElementById('dayThu').checked,
+                    Fri: document.getElementById('dayFri').checked,
+                    SatEarly: document.getElementById('daySatEarly').checked,
+                    SatLate: document.getElementById('daySatLate').checked,
+                    SunEarly: document.getElementById('daySunEarly').checked,
+                    SunLate: document.getElementById('daySunLate').checked
+                };
+                this.animateAndUpdate();
+            }
+            
+            animateAndUpdate() {
+                const container = document.getElementById('leaderboardContent');
+                if (!container) {
+                    this.updateLeaderboard();
+                    return;
+                }
+                
+                // Animate existing items shuffling before update
+                const existingItems = container.querySelectorAll('.leaderboard-row');
+                if (existingItems.length > 0) {
+                    this.animateReorder(existingItems);
+                    setTimeout(() => {
+                        this.updateLeaderboard();
+                    }, 400);
+                } else {
+                    this.updateLeaderboard();
+                }
+            }
+            
+            getFilteredEvents() {
+                // Get all events
+                const allEvents = window.VanguardData ? window.VanguardData.getAllEvents() : [];
+                
+                if (allEvents.length === 0) {
+                    return [];
+                }
+                
+                // Apply location filter
+                let filtered = allEvents;
+                if (this.location !== 'combined') {
+                    filtered = filtered.filter(event => event.location === this.location);
+                }
+                
+                // Apply period filter
+                if (this.period !== 'ALL') {
+                    const now = new Date();
+                    const monthsAgo = this.period === '1M' ? 1 : this.period === '3M' ? 3 : 12;
+                    const cutoffDate = new Date();
+                    cutoffDate.setMonth(cutoffDate.getMonth() - monthsAgo);
+                    
+                    filtered = filtered.filter(event => {
+                        const eventDate = new Date(event.dateValue || event.date);
+                        if (isNaN(eventDate)) {
+                            return false;
+                        }
+                        return eventDate >= cutoffDate;
+                    });
+                }
+                
+                // Apply day filter - only if at least one day is selected
+                const anyDaySelected = Object.values(this.selectedDays).some(v => v === true);
+                if (anyDaySelected) {
+                    filtered = filtered.filter(event => {
+                        let day = event.day;
+                        const isLate = event.isLate;
+                        
+                        // Clean up day - remove (Late) suffix if present
+                        if (day && day.includes('(Late)')) {
+                            day = day.replace('(Late)', '').trim();
+                        }
+                        
+                        // Check each day type
+                        if (day === 'Monday' && this.selectedDays.Mon) return true;
+                        if (day === 'Tuesday' && this.selectedDays.Tue) return true;
+                        if (day === 'Wednesday' && this.selectedDays.Wed) return true;
+                        if (day === 'Thursday' && this.selectedDays.Thu) return true;
+                        if (day === 'Friday' && this.selectedDays.Fri) return true;
+                        if (day === 'Saturday' && !isLate && this.selectedDays.SatEarly) return true;
+                        if (day === 'Saturday' && isLate && this.selectedDays.SatLate) return true;
+                        if (day === 'Sunday' && !isLate && this.selectedDays.SunEarly) return true;
+                        if (day === 'Sunday' && isLate && this.selectedDays.SunLate) return true;
+                        
+                        return false;
+                    });
+                } else {
+                    return [];
+                }
+                
+                return filtered;
+            }
+            
+            calculateAspectValue(event, aspect) {
+                // Use event properties first if available, fallback to columnData
+                if (event.netSales !== undefined && event.attendance !== undefined) {
+                    // Event has cached properties (BingoEvent)
+                    switch(aspect) {
+                        case 'rpa':
+                            // RPA = Total Sales / Attendance
+                            return event.attendance > 0 ? event.totalSales / event.attendance : 0;
+                        case 'flashRPA':
+                            return event.attendance > 0 ? (event.flash || 0) / event.attendance : 0;
+                        case 'stripRPA':
+                            return event.attendance > 0 ? (event.strips || 0) / event.attendance : 0;
+                        case 'margin':
+                            // Fix margin if it's stored as decimal instead of percentage
+                            let marginValue = event.margin || 0;
+                            if (marginValue > 0 && marginValue < 1) {
+                                marginValue = marginValue * 100;
+                            }
+                            return marginValue;
+                        case 'totalSales':
+                            return event.totalSales || 0;
+                        case 'netSales':
+                            return event.netSales || 0;
+                        case 'attendance':
+                            return event.attendance || 0;
+                        case 'strips':
+                            return event.strips || 0;
+                        case 'flash':
+                            return event.flash || 0;
+                        default:
+                            return 0;
+                    }
+                }
+                
+                // Fallback to getting values from columnData
+                const getValue = (rowNum) => {
+                    if (event.columnData) {
+                        const rowKey = `row${rowNum}`;
+                        if (event.columnData[rowKey]) {
+                            const value = parseFloat(event.columnData[rowKey].value);
+                            return isNaN(value) ? 0 : value;
+                        }
+                    }
+                    return 0;
+                };
+                
+                // Get common values (matching row numbers from the spreadsheet)
+                const totalSales = getValue(12);
+                const totalPayouts = getValue(29);
+                const netSales = getValue(31);
+                const attendance = getValue(40);
+                const margin = getValue(32);
+                const flash = getValue(6);
+                const strips = getValue(9);
+                
+                switch(aspect) {
+                    case 'rpa':
+                        // RPA = Total Sales / Attendance
+                        return attendance > 0 ? totalSales / attendance : 0;
+                    case 'flashRPA':
+                        return attendance > 0 ? flash / attendance : 0;
+                    case 'stripRPA':
+                        return attendance > 0 ? strips / attendance : 0;
+                    case 'margin':
+                        // Fix margin if it's stored as decimal instead of percentage
+                        return margin > 0 && margin < 1 ? margin * 100 : margin;
+                    case 'flashMargin':
+                        const flashCost = getValue(18) + getValue(27);
+                        return flash > 0 ? ((flash - flashCost) / flash) * 100 : 0;
+                    case 'stripMargin':
+                        const stripCost = getValue(16) + getValue(19) + getValue(20) + getValue(21) + getValue(22);
+                        return strips > 0 ? ((strips - stripCost) / strips) * 100 : 0;
+                    case 'totalSales':
+                        return totalSales;
+                    case 'netSales':
+                        return netSales;
+                    case 'attendance':
+                        return attendance;
+                    case 'strips':
+                        return strips;
+                    case 'flash':
+                        return flash;
+                    default:
+                        return 0;
+                }
+            }
+            
+            updateLeaderboard() {
+                // Play shuffle sound when updating (with debounce to prevent double-play)
+                if (window.AppSounds && (!this.lastSoundTime || Date.now() - this.lastSoundTime > 100)) {
+                    AppSounds.play('shuffle');
+                    this.lastSoundTime = Date.now();
+                }
+                
+                // Check if VanguardData exists
+                if (!window.VanguardData) {
+                    console.error('VanguardData not available!');
+                    return;
+                }
+                
+                // Get all events
+                const allEvents = window.VanguardData.getAllEvents();
+                
+                // Get aspect from dropdown
+                this.aspect = document.getElementById('leaderboardAspect').value;
+                
+                // Get filtered events
+                this.filteredEvents = this.getFilteredEvents();
+                
+                // Calculate aspect value for each event and sort
+                const eventsWithValues = this.filteredEvents.map(event => {
+                    const value = this.calculateAspectValue(event, this.aspect);
+                    return {
+                        event: event,
+                        value: value
+                    };
+                });
+                
+                // Filter out events with zero or invalid values
+                const validEvents = eventsWithValues.filter(item => 
+                    item.value > 0 && !isNaN(item.value) && isFinite(item.value)
+                );
+                
+                // Sort by value (descending) and take top 20
+                validEvents.sort((a, b) => b.value - a.value);
+                this.topEvents = validEvents.slice(0, 20);
+                
+                // Render the leaderboard
+                this.renderLeaderboard();
+            }
+            
+            renderLeaderboard() {
+                const container = document.getElementById('leaderboardContent');
+                if (!container) return;
+                
+                // Update the event pool counter
+                const poolCountEl = document.getElementById('eventPoolCount');
+                if (poolCountEl) {
+                    poolCountEl.textContent = this.filteredEvents.length;
+                }
+                
+                if (this.topEvents.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                            No events match the selected filters
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Just render without animation
+                this.renderEvents(container);
+            }
+            
+            renderEvents(container) {
+                container.innerHTML = this.topEvents.map((item, index) => {
+                    const event = item.event;
+                    const aspectValue = item.value;
+                    
+                    // Event ID check removed for cleaner console
+                    
+                    // Helper to get values from event data
+                    const getValue = (rowNum) => {
+                        if (event.columnData) {
+                            const rowKey = `row${rowNum}`;
+                            if (event.columnData[rowKey]) {
+                                const value = parseFloat(event.columnData[rowKey].value);
+                                return isNaN(value) ? 0 : value;
+                            }
+                        }
+                        return 0;
+                    };
+                    
+                    // Format the aspect value
+                    let formattedAspect = '';
+                    if (this.aspect.includes('Margin')) {
+                        formattedAspect = aspectValue.toFixed(1) + '%';
+                    } else if (this.aspect.includes('RPA') || this.aspect.includes('rpa')) {
+                        formattedAspect = '$' + aspectValue.toFixed(0);
+                    } else if (this.aspect === 'attendance') {
+                        formattedAspect = aspectValue.toFixed(0);
+                    } else {
+                        formattedAspect = '$' + aspectValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    }
+                    
+                    // Format date cleanly - remove ALL time/timestamp info
+                    let eventDateClean = '';
+                    if (event.dateValue || event.date) {
+                        const dateStr = (event.dateValue || event.date).toString();
+                        // Try to extract just the date part
+                        const dateMatch = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                        if (dateMatch) {
+                            eventDateClean = dateMatch[0];
+                        } else {
+                            // Remove everything that looks like time
+                            let cleanDate = dateStr.split('T')[0];
+                            cleanDate = cleanDate.split(' GMT')[0];
+                            cleanDate = cleanDate.split(' 00:00:00')[0];
+                            cleanDate = cleanDate.replace(/\s+\d{2}:\d{2}:\d{2}(\.\d+)?Z?/g, '');
+                            cleanDate = cleanDate.replace(/T\d{2}:\d{2}:\d{2}(\.\d+)?Z?/g, '');
+                            eventDateClean = cleanDate;
+                        }
+                    }
+                    
+                    const eventLocation = event.location || '';
+                    const eventDay = event.day || '';
+                    const isLate = event.isLate ? ' Late' : '';
+                    const eventTitle = `${eventLocation} - ${eventDay} ${eventDateClean}${isLate}`;
+                    
+                    // Ensure event has an ID for navigation
+                    const eventId = event.id || `${event.location}-${eventDateClean.replace(/\//g, '-')}-${event.isLate ? 'L' : 'D'}`;
+                    
+                    // Get values for display
+                    const totalSales = getValue(12);
+                    const netSales = getValue(31);
+                    let margin = getValue(32); // This might be a decimal (0.432) or percentage (43.2)
+                    const attendance = getValue(40);
+                    const flash = getValue(6);
+                    const strips = getValue(9);
+                    
+                    // Fix margin if it's a decimal instead of percentage
+                    if (margin > 0 && margin < 1) {
+                        margin = margin * 100; // Convert 0.432 to 43.2
+                    }
+                    
+                    // Calculate RPA values for display
+                    // RPA should be Total Sales / Attendance (not Net Sales)
+                    let rpa = 0;
+                    if (event.totalSales !== undefined && event.attendance !== undefined && event.attendance > 0) {
+                        rpa = event.totalSales / event.attendance;
+                    } else if (attendance > 0) {
+                        rpa = totalSales / attendance;
+                    }
+                    
+                    const flashRPA = attendance > 0 ? flash / attendance : 0;
+                    const stripRPA = attendance > 0 ? strips / attendance : 0;
+                    
+                    // Get notes from rows 59 and 60 - these are text values, not numbers
+                    let notes = '';
+                    let promotionNotes = '';
+                    
+                    if (event.getRowValue) {
+                        // Use the BingoEvent method if available
+                        notes = event.getRowValue(59) || '';
+                        promotionNotes = event.getRowValue(60) || '';
+                    } else if (event.columnData) {
+                        // Fallback to direct access for text values
+                        notes = event.columnData.row59?.value || '';
+                        promotionNotes = event.columnData.row60?.value || '';
+                    }
+                    
+                    // Combine notes into one display
+                    let combinedNotes = '';
+                    let fullNotesText = '';
+                    if (promotionNotes && notes) {
+                        combinedNotes = `${promotionNotes} | ${notes}`;
+                        fullNotesText = `Promotion: ${promotionNotes}\nNotes: ${notes}`;
+                    } else if (promotionNotes) {
+                        combinedNotes = promotionNotes;
+                        fullNotesText = `Promotion: ${promotionNotes}`;
+                    } else if (notes) {
+                        combinedNotes = notes;
+                        fullNotesText = `Notes: ${notes}`;
+                    }
+                    
+                    // Determine which metric to highlight based on aspect
+                    let highlightIndex = -1;
+                    if (this.aspect === 'netSales') highlightIndex = 0;
+                    else if (this.aspect === 'totalSales') highlightIndex = 1;
+                    else if (this.aspect === 'margin') highlightIndex = 2;
+                    else if (this.aspect === 'rpa') highlightIndex = 3;
+                    else if (this.aspect === 'stripRPA') highlightIndex = 4;
+                    else if (this.aspect === 'flashRPA') highlightIndex = 5;
+                    else if (this.aspect === 'attendance') highlightIndex = 6;
+                    else if (this.aspect === 'strips') highlightIndex = 7;
+                    else if (this.aspect === 'flash') highlightIndex = 8;
+                    
+                    // Determine rank icon
+                    let rankIcon = '';
+                    if (index === 0) {
+                        rankIcon = '🏆'; // Gold trophy
+                    } else if (index === 1) {
+                        rankIcon = '🥈'; // Silver medal
+                    } else if (index === 2) {
+                        rankIcon = '🥉'; // Bronze medal
+                    } else {
+                        rankIcon = index + 1;
+                    }
+                    
+                    // Determine border style based on rank
+                    let borderStyle = '';
+                    let boxShadow = '';
+                    let marginStyle = '';
+                    
+                    if (index === 0) {
+                        // Gold - 1st place with thin border and animated glow
+                        borderStyle = 'border: 1px solid #FFD700; animation: glowGold 2s ease-in-out infinite;';
+                        boxShadow = '';
+                        marginStyle = 'margin: 0 0 8px 0;'; // Add space below 1st place
+                    } else if (index === 1) {
+                        // Silver - 2nd place with thin border, no glow
+                        borderStyle = 'border: 1px solid #C0C0C0;';
+                        boxShadow = '';
+                        marginStyle = 'margin: 0;';
+                    } else if (index === 2) {
+                        // Bronze - 3rd place with thin border, no glow
+                        borderStyle = 'border: 1px solid #CD7F32;';
+                        boxShadow = '';
+                        marginStyle = 'margin: 0;';
+                    } else {
+                        // Regular border for 4th place and below
+                        borderStyle = 'border: 1px solid #000; border-left: 1px solid #000; border-right: 1px solid #000;';
+                        boxShadow = '';
+                        marginStyle = 'margin: 0;';
+                    }
+                    
+                    return `
+                        <div class="leaderboard-row" style="background: white; padding: 4px 6px; ${borderStyle} ${boxShadow} ${index > 2 ? 'border-bottom: 1px solid #000;' : ''} ${index === 3 ? 'border-top: 1px solid #000;' : ''} transition: transform 0.3s ease-out, opacity 0.3s ease-out; border-radius: ${index === 0 ? '4px' : '0'}; ${marginStyle}">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <!-- Rank number/trophy on far left -->
+                                <div style="width: 20px; height: 20px; ${index < 3 ? '' : 'background: linear-gradient(135deg, #667eea, #764ba2);'} 
+                                          border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                                          ${index < 3 ? '' : 'color: white;'} font-weight: bold; font-size: ${index < 3 ? '14px' : '10px'}; flex-shrink: 0;">
+                                    ${rankIcon}
+                                </div>
+                                
+                                <!-- Event title -->
+                                <div onclick="window.LeaderboardManager.navigateToEvent('${eventId}')" 
+                                     style="font-size: 11px; font-weight: 500; color: #1e293b; cursor: pointer; 
+                                            text-decoration: none; width: 180px; flex-shrink: 0;"
+                                     onmouseover="this.style.textDecoration='underline'"
+                                     onmouseout="this.style.textDecoration='none'"
+                                     title="Click to see full event">
+                                    ${eventTitle}
+                                </div>
+                                
+                                <!-- Metric cards with minimal gaps and click handlers -->
+                                <div style="display: flex; gap: 2px; flex: 1;">
+                                    ${this.renderCompactCard('Net Sales', '$' + netSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ','), '#10b981', highlightIndex === 0, 'netSales')}
+                                    ${this.renderCompactCard('Total Sales', '$' + totalSales.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ','), '#3b82f6', highlightIndex === 1, 'totalSales')}
+                                    ${this.renderCompactCard('Margin', margin.toFixed(1) + '%', '#8b5cf6', highlightIndex === 2, 'margin')}
+                                    ${this.renderCompactCard('RPA', '$' + rpa.toFixed(0), '#f59e0b', highlightIndex === 3, 'rpa')}
+                                    ${this.renderCompactCard('Strip RPA', '$' + stripRPA.toFixed(0), '#06b6d4', highlightIndex === 4, 'stripRPA')}
+                                    ${this.renderCompactCard('Flash RPA', '$' + flashRPA.toFixed(0), '#84cc16', highlightIndex === 5, 'flashRPA')}
+                                    ${this.renderCompactCard('Attendance', attendance.toFixed(0), '#dc2626', highlightIndex === 6, 'attendance')}
+                                    ${this.renderCompactCard('Strip Sales', '$' + strips.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ','), '#a855f7', highlightIndex === 7, 'strips')}
+                                    ${this.renderCompactCard('Flash Sales', '$' + flash.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ','), '#0ea5e9', highlightIndex === 8, 'flash')}
+                                </div>
+                                
+                                <!-- Combined Notes column -->
+                                <div style="width: 150px; padding: 2px 4px; font-size: 9px; color: #64748b; 
+                                          border: 1px solid #e5e7eb; border-radius: 3px; background: #f8fafc;
+                                          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                                          flex-shrink: 0; cursor: ${combinedNotes ? 'help' : 'default'};"
+                                     title="${fullNotesText}">
+                                    ${combinedNotes || '-'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            animateReorder(existingItems) {
+                // Animate existing items moving up and down randomly
+                existingItems.forEach((item, index) => {
+                    // Random vertical shift
+                    const randomShift = (Math.random() - 0.5) * 100;
+                    
+                    // Apply random vertical transform only (no rotation)
+                    item.style.transform = `translateY(${randomShift}px)`;
+                    item.style.opacity = '0.6';
+                    
+                    // Some items move more than others for variety
+                    if (Math.random() > 0.7) {
+                        setTimeout(() => {
+                            item.style.transform = `translateY(${-randomShift}px)`;
+                        }, 150);
+                    }
+                });
+            }
+            
+            renderCompactCard(label, value, color, isHighlighted, aspectValue) {
+                const clickHandler = aspectValue ? `onclick="event.stopPropagation(); window.LeaderboardManager.setAspect('${aspectValue}'); return false;"` : '';
+                const cursor = aspectValue ? 'cursor: pointer;' : '';
+                
+                if (isHighlighted) {
+                    // Highlighted version for the selected aspect
+                    return `
+                        <div ${clickHandler} style="background: ${color}; 
+                                  border: 1px solid ${color}; border-radius: 3px; padding: 3px 5px; 
+                                  min-width: 60px; flex: 1; ${cursor}">
+                            <div style="font-size: 7px; color: white; font-weight: 600; text-transform: uppercase; pointer-events: none;">
+                                ${label}
+                            </div>
+                            <div style="font-size: 11px; font-weight: 700; color: white; pointer-events: none;">
+                                ${value}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Regular compact version
+                    return `
+                        <div ${clickHandler} style="background: ${color}15; 
+                                  border: 1px solid ${color}40; border-radius: 3px; padding: 3px 5px; 
+                                  min-width: 60px; flex: 1; ${cursor}"
+                             onmouseover="this.style.background='${color}25'"
+                             onmouseout="this.style.background='${color}15'">
+                            <div style="font-size: 7px; color: ${color}; font-weight: 500; text-transform: uppercase; pointer-events: none;">
+                                ${label}
+                            </div>
+                            <div style="font-size: 9px; font-weight: 600; color: #1e293b; pointer-events: none;">
+                                ${value}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            setAspect(aspect) {
+                // Prevent default click sound since we're playing shuffle
+                event?.stopPropagation?.();
+                AppSounds.play('shuffle'); // Play shuffle sound
+                document.getElementById('leaderboardAspect').value = aspect;
+                this.aspect = aspect;
+                this.animateAndUpdate();
+            }
+            
+            renderMetricCard(label, value, color) {
+                return `
+                    <div style="background: linear-gradient(135deg, ${color}15, ${color}25); 
+                              border: 1px solid ${color}40; border-radius: 6px; padding: 8px 10px;">
+                        <div style="font-size: 9px; color: ${color}; font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">
+                            ${label}
+                        </div>
+                        <div style="font-size: 14px; font-weight: 700; color: #1e293b;">
+                            ${value}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            navigateToEvent(eventId) {
+                // Switch to Events view and load the specific event
+                // console.log('Navigating to event with ID:', eventId);
+                
+                // Play navigation sound
+                AppSounds.play('navigate');
+                
+                // Switch to Events view
+                switchView('events');
+                
+                // Wait a moment for the view to switch, then select the event
+                setTimeout(() => {
+                    if (window.EventManager) {
+                        // console.log('EventManager available, looking for event:', eventId);
+                        console.log('Available event IDs:', Object.keys(window.EventManager.eventsById).slice(0, 5));
+                        
+                        // First try to find the event by ID
+                        let event = window.EventManager.eventsById[eventId];
+                        
+                        if (!event) {
+                            // If not found, try to find by matching properties
+                            const allEvents = window.EventManager.events;
+                            event = allEvents.find(e => e.id === eventId);
+                            // console.log('Searched all events, found:', event ? event.id : 'none');
+                        }
+                        
+                        if (!event) {
+                            // Still not found, try to parse the ID and match by properties
+                            // ID format: "SC-5-2-2025-D" or "RWC-5-2-2025-L"
+                            const parts = eventId.split('-');
+                            if (parts.length >= 4) {
+                                const location = parts[0];
+                                const isLate = parts[parts.length - 1] === 'L';
+                                // Reconstruct date from parts
+                                const dateStr = `${parts[1]}/${parts[2]}/${parts[3]}`;
+                                
+                                event = window.EventManager.events.find(e => 
+                                    e.location === location &&
+                                    e.date === dateStr &&
+                                    e.isLate === isLate
+                                );
+                                
+                                if (event) {
+                                    // console.log('Found event by matching properties:', event.id);
+                                }
+                            }
+                        }
+                        
+                        if (event) {
+                            // Directly set as current event and update displays
+                            window.EventManager.currentEvent = event;
+                            window.EventManager.updateAllDisplays();
+                            // console.log('Successfully loaded event:', event.getDisplayName());
+                            
+                            // Also update any button states
+                            const buttons = document.querySelectorAll('.event-btn');
+                            buttons.forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                        } else {
+                            // Event not found - fail silently
+                        }
+                    }
+                }, 100);
+            }
+            
+            // Encode current state to URL parameters
+            getStateAsUrlParams() {
+                const params = new URLSearchParams();
+                
+                // Add all current filter states
+                params.set('view', 'leaderboard');
+                params.set('aspect', this.aspect || 'rpa');
+                params.set('period', this.period || '1M');
+                params.set('location', this.location || 'combined');
+                
+                // Encode selected days as comma-separated list
+                const activeDays = [];
+                for (const [day, selected] of Object.entries(this.selectedDays)) {
+                    if (selected) activeDays.push(day);
+                }
+                if (activeDays.length > 0) {
+                    params.set('days', activeDays.join(','));
+                }
+                
+                return params.toString();
+            }
+            
+            // Create shortened hash-based URL
+            getShortUrl() {
+                // Create a compact hash representation
+                // Format: #lb-[aspect]-[period]-[location]-[days]
+                const parts = ['lb'];
+                
+                // Shorten aspect names
+                const aspectMap = {
+                    'rpa': 'r',
+                    'flashRPA': 'fr',
+                    'stripRPA': 'sr',
+                    'margin': 'm',
+                    'flashMargin': 'fm',
+                    'stripMargin': 'sm',
+                    'totalSales': 'ts',
+                    'netSales': 'ns',
+                    'attendance': 'a',
+                    'strips': 's',
+                    'flash': 'f'
+                };
+                parts.push(aspectMap[this.aspect] || 'r');
+                
+                // Period is already short
+                parts.push(this.period || '1M');
+                
+                // Shorten location
+                const locMap = {
+                    'combined': 'C',
+                    'SC': 'S',
+                    'RWC': 'R'
+                };
+                parts.push(locMap[this.location] || 'C');
+                
+                // Shorten days to initials
+                const dayMap = {
+                    'Mon': 'M',
+                    'Tue': 'T',
+                    'Wed': 'W',
+                    'Thu': 'H',
+                    'Fri': 'F',
+                    'SatEarly': 'Se',
+                    'SatLate': 'Sl',
+                    'SunEarly': 'Ue',
+                    'SunLate': 'Ul'
+                };
+                
+                const activeDays = [];
+                for (const [day, selected] of Object.entries(this.selectedDays)) {
+                    if (selected && dayMap[day]) {
+                        activeDays.push(dayMap[day]);
+                    }
+                }
+                if (activeDays.length > 0) {
+                    parts.push(activeDays.join(''));
+                }
+                
+                const baseUrl = window.location.origin + window.location.pathname;
+                return `${baseUrl}#${parts.join('-')}`;
+            }
+            
+            // Decode shortened hash URL
+            loadFromHash() {
+                const hash = window.location.hash.slice(1); // Remove #
+                if (!hash.startsWith('lb-')) return false;
+                
+                const parts = hash.split('-');
+                if (parts.length < 3) return false;
+                
+                // Decode aspect
+                const aspectMap = {
+                    'r': 'rpa',
+                    'fr': 'flashRPA',
+                    'sr': 'stripRPA',
+                    'm': 'margin',
+                    'fm': 'flashMargin',
+                    'sm': 'stripMargin',
+                    'ts': 'totalSales',
+                    'ns': 'netSales',
+                    'a': 'attendance',
+                    's': 'strips',
+                    'f': 'flash'
+                };
+                this.aspect = aspectMap[parts[1]] || 'rpa';
+                
+                // Decode period
+                this.period = parts[2] || '1M';
+                
+                // Decode location
+                const locMap = {
+                    'C': 'combined',
+                    'S': 'SC',
+                    'R': 'RWC'
+                };
+                this.location = locMap[parts[3]] || 'combined';
+                
+                // Decode days if present
+                if (parts[4]) {
+                    const dayMap = {
+                        'M': 'Mon',
+                        'T': 'Tue',
+                        'W': 'Wed',
+                        'H': 'Thu',
+                        'F': 'Fri'
+                    };
+                    
+                    // Reset all days first
+                    for (const day in this.selectedDays) {
+                        this.selectedDays[day] = false;
+                    }
+                    
+                    // Parse the day string
+                    let i = 0;
+                    while (i < parts[4].length) {
+                        // Check for two-letter codes first (Se, Sl, Ue, Ul)
+                        if (i < parts[4].length - 1) {
+                            const twoChar = parts[4].substr(i, 2);
+                            if (twoChar === 'Se') {
+                                this.selectedDays.SatEarly = true;
+                                i += 2;
+                                continue;
+                            } else if (twoChar === 'Sl') {
+                                this.selectedDays.SatLate = true;
+                                i += 2;
+                                continue;
+                            } else if (twoChar === 'Ue') {
+                                this.selectedDays.SunEarly = true;
+                                i += 2;
+                                continue;
+                            } else if (twoChar === 'Ul') {
+                                this.selectedDays.SunLate = true;
+                                i += 2;
+                                continue;
+                            }
+                        }
+                        
+                        // Single character days
+                        const char = parts[4][i];
+                        const day = dayMap[char];
+                        if (day) {
+                            this.selectedDays[day] = true;
+                        }
+                        i++;
+                    }
+                }
+                
+                // Update UI elements
+                const aspectDropdown = document.getElementById('leaderboardAspect');
+                if (aspectDropdown) aspectDropdown.value = this.aspect;
+                
+                document.querySelectorAll('#leaderboard-view .period-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.period === this.period);
+                });
+                
+                document.querySelectorAll('#leaderboard-view .location-btn').forEach(btn => {
+                    const isActive = (btn.textContent === 'Combined' && this.location === 'combined') ||
+                                   (btn.textContent === this.location);
+                    btn.classList.toggle('active', isActive);
+                });
+                
+                // Update checkboxes
+                for (const [day, selected] of Object.entries(this.selectedDays)) {
+                    const checkbox = document.getElementById('day' + day);
+                    if (checkbox) checkbox.checked = selected;
+                }
+                
+                this.updateLeaderboard();
+                return true;
+            }
+            
+            // Load state from URL parameters
+            loadStateFromUrl() {
+                const params = new URLSearchParams(window.location.search);
+                
+                // Only proceed if this is a leaderboard view
+                if (params.get('view') !== 'leaderboard') return false;
+                
+                // Load aspect
+                const aspect = params.get('aspect');
+                if (aspect) {
+                    this.aspect = aspect;
+                    const aspectDropdown = document.getElementById('leaderboardAspect');
+                    if (aspectDropdown) aspectDropdown.value = aspect;
+                }
+                
+                // Load period
+                const period = params.get('period');
+                if (period) {
+                    this.period = period;
+                    document.querySelectorAll('#leaderboard-view .period-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.period === period);
+                    });
+                }
+                
+                // Load location
+                const location = params.get('location');
+                if (location) {
+                    this.location = location;
+                    document.querySelectorAll('#leaderboard-view .location-btn').forEach(btn => {
+                        const isActive = (btn.textContent === 'Combined' && location === 'combined') ||
+                                       (btn.textContent === location);
+                        btn.classList.toggle('active', isActive);
+                    });
+                }
+                
+                // Load selected days
+                const days = params.get('days');
+                if (days) {
+                    const activeDays = days.split(',');
+                    // Reset all checkboxes first
+                    for (const day in this.selectedDays) {
+                        this.selectedDays[day] = false;
+                        const checkbox = document.getElementById('day' + day);
+                        if (checkbox) checkbox.checked = false;
+                    }
+                    // Set active days
+                    activeDays.forEach(day => {
+                        if (this.selectedDays.hasOwnProperty(day)) {
+                            this.selectedDays[day] = true;
+                            const checkbox = document.getElementById('day' + day);
+                            if (checkbox) checkbox.checked = true;
+                        }
+                    });
+                }
+                
+                // Update the leaderboard with loaded state
+                this.updateLeaderboard();
+                return true;
+            }
+            
+            // Share leaderboard - creates shareable link
+            shareLeaderboard() {
+                const shortUrl = this.getShortUrl();
+                
+                // Create share dialog
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: white; padding: 30px; border-radius: 12px;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.2); z-index: 10000;
+                    max-width: 500px; width: 90%;
+                `;
+                
+                // Store the shortened URL
+                dialog.innerHTML = `
+                    <h3 style="margin: 0 0 20px 0; color: #1e293b; font-size: 20px;">Share Leaderboard</h3>
+                    <p style="color: #64748b; margin-bottom: 15px; font-size: 14px;">
+                        Copy this link to share the current leaderboard view with all filters:
+                    </p>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <input type="text" id="shareUrlDisplay" value="${shortUrl}" readonly 
+                               style="flex: 1; padding: 10px; border: 1px solid #e2e8f0; 
+                                      border-radius: 6px; font-size: 13px; background: #f8fafc;
+                                      font-family: monospace; color: #1e293b;">
+                        <input type="hidden" id="shareUrl" value="${shortUrl}">
+                        <button onclick="window.LeaderboardManager.copyShareUrl()" 
+                                style="padding: 10px 20px; background: #3b82f6; color: white;
+                                       border: none; border-radius: 6px; cursor: pointer;
+                                       font-weight: 600; font-size: 13px;">
+                            Copy Link
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="this.parentElement.parentElement.remove()" 
+                                style="width: 100%; padding: 10px; background: #64748b; color: white;
+                                       border: none; border-radius: 6px; cursor: pointer;
+                                       font-weight: 600; font-size: 13px;">
+                            Close
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(dialog);
+                
+                // Select the URL for easy copying
+                document.getElementById('shareUrlDisplay').select();
+            }
+            
+            // Copy share URL to clipboard
+            copyShareUrl() {
+                const hiddenInput = document.getElementById('shareUrl');
+                const displayInput = document.getElementById('shareUrlDisplay');
+                
+                if (hiddenInput && hiddenInput.value) {
+                    // Copy the actual URL to clipboard
+                    navigator.clipboard.writeText(hiddenInput.value).then(() => {
+                        // Show success message
+                        const button = event.target;
+                        const originalText = button.textContent;
+                        button.textContent = '✓ Copied!';
+                        button.style.background = '#10b981';
+                        
+                        // Also update the display to show it was copied
+                        if (displayInput) {
+                            const originalDisplay = displayInput.value;
+                            displayInput.value = 'Link Copied!';
+                            setTimeout(() => {
+                                displayInput.value = originalDisplay;
+                            }, 2000);
+                        }
+                        
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                            button.style.background = '#3b82f6';
+                        }, 2000);
+                    }).catch(() => {
+                        // Fallback for older browsers
+                        const tempInput = document.createElement('input');
+                        tempInput.value = hiddenInput.value;
+                        document.body.appendChild(tempInput);
+                        tempInput.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(tempInput);
+                        
+                        // Show success
+                        const button = event.target;
+                        const originalText = button.textContent;
+                        button.textContent = '✓ Copied!';
+                        button.style.background = '#10b981';
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                            button.style.background = '#3b82f6';
+                        }, 2000);
+                    });
+                }
+            }
+            
+            // Open email client with share URL
+            emailShareUrl(encodedUrl) {
+                const subject = `Vanguard Bingo Leaderboard - ${this.aspect.toUpperCase()} Rankings`;
+                const body = `Check out the current bingo leaderboard:\n\n${decodeURIComponent(encodedUrl)}\n\nFilters applied:\n- Metric: ${this.aspect.toUpperCase()}\n- Period: ${this.period}\n- Location: ${this.location}\n- Days: ${Object.entries(this.selectedDays).filter(([d,v]) => v).map(([d]) => d).join(', ')}`;
+                
+                window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            }
+        }
+        
+        // Create global LeaderboardManager instance
+        window.LeaderboardManager = new LeaderboardManager();
+        
+        // ============================================================
+        // NOTIFICATIONS MANAGER
+        // ============================================================
+        class NotificationsManager {
+            constructor() {
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.hasBeenViewed = false;
+                this.loadFromStorage();
+            }
+            
+            loadFromStorage() {
+                // Load notifications from localStorage
+                const stored = localStorage.getItem('vanguard_notifications');
+                if (stored) {
+                    try {
+                        const data = JSON.parse(stored);
+                        this.notifications = data.notifications || [];
+                        this.unreadCount = data.unreadCount || 0;
+                        this.updateBadge();
+                    } catch (e) {
+                        console.error('Error loading notifications:', e);
+                    }
+                }
+            }
+            
+            saveToStorage() {
+                // Save notifications to localStorage
+                localStorage.setItem('vanguard_notifications', JSON.stringify({
+                    notifications: this.notifications,
+                    unreadCount: this.unreadCount
+                }));
+            }
+            
+            addNotification(message, type = 'info', eventData = null) {
+                // Check for duplicates to prevent adding same notification twice
+                const isDuplicate = this.notifications.some(n => {
+                    // Exact message match is always a duplicate
+                    const sameMessage = n.message === message;
+                    
+                    // If messages don't match, not a duplicate
+                    if (!sameMessage) return false;
+                    
+                    // Messages match, now check event data
+                    // If both have event data, must be same event
+                    if (n.eventData && eventData) {
+                        const sameEvent = n.eventData.date === eventData.date &&
+                                        n.eventData.location === eventData.location;
+                        if (sameEvent) {
+                            // console.log('Found duplicate notification (same message and event):', message);
+                        }
+                        return sameEvent;
+                    }
+                    
+                    // If one has event data and other doesn't, still consider duplicate if message matches
+                    // console.log('Found duplicate notification (same message):', message);
+                    return true;
+                });
+                
+                if (isDuplicate) {
+                    return null;
+                }
+                
+                const notification = {
+                    id: Date.now() + '_' + Math.random(),
+                    message: message,
+                    type: type, // 'success', 'warning', 'info', 'alert'
+                    timestamp: new Date().toISOString(),
+                    read: false,
+                    eventData: eventData
+                };
+                
+                // Add to beginning of array (newest first)
+                this.notifications.unshift(notification);
+                
+                // Keep only last 50 notifications
+                if (this.notifications.length > 50) {
+                    this.notifications = this.notifications.slice(0, 50);
+                }
+                
+                this.unreadCount++;
+                this.updateBadge();
+                this.saveToStorage();
+                
+                // If notifications view is active, update it
+                if (document.getElementById('notifications-view')?.classList.contains('active')) {
+                    this.renderNotifications();
+                }
+                
+                return notification;
+            }
+            
+            updateBadge() {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (this.unreadCount > 0) {
+                        badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+            
+            markAllAsRead() {
+                this.notifications.forEach(n => n.read = true);
+                this.unreadCount = 0;
+                this.updateBadge();
+                this.saveToStorage();
+            }
+            
+            clearAll() {
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.updateBadge();
+                this.saveToStorage();
+                this.renderNotifications();
+            }
+            
+            renderNotifications() {
+                const listContainer = document.getElementById('notificationsList');
+                const noNotifications = document.getElementById('noNotifications');
+                const countSpan = document.getElementById('notificationCount');
+                
+                if (!listContainer) return;
+                
+                if (this.notifications.length === 0) {
+                    listContainer.style.display = 'none';
+                    if (noNotifications) noNotifications.style.display = 'block';
+                    if (countSpan) countSpan.textContent = '';
+                    return;
+                }
+                
+                listContainer.style.display = 'flex';
+                if (noNotifications) noNotifications.style.display = 'none';
+                if (countSpan) countSpan.textContent = `(${this.notifications.length} total)`;
+                
+                // Add clear all button if there are notifications
+                const clearAllHtml = this.notifications.length > 0 ? `
+                    <div style="text-align: right; margin-bottom: 15px;">
+                        <button onclick="window.NotificationsManager.clearAll()" 
+                                style="padding: 6px 12px; background: #ef4444; color: white; border: none; 
+                                       border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500;">
+                            Clear All
+                        </button>
+                    </div>
+                ` : '';
+                
+                listContainer.innerHTML = clearAllHtml + this.notifications.map(notification => {
+                    // Determine colors and icon based on type
+                    let bgColor, borderColor, icon, textColor;
+                    switch(notification.type) {
+                        case 'success':
+                            bgColor = '#f0fdf4';
+                            borderColor = '#86efac';
+                            textColor = '#166534';
+                            icon = '✅';
+                            break;
+                        case 'warning':
+                            bgColor = '#fefce8';
+                            borderColor = '#fde047';
+                            textColor = '#713f12';
+                            icon = '⚠️';
+                            break;
+                        case 'alert':
+                            bgColor = '#fef2f2';
+                            borderColor = '#fca5a5';
+                            textColor = '#991b1b';
+                            icon = '🚨';
+                            break;
+                        default: // info
+                            bgColor = '#f0f9ff';
+                            borderColor = '#93c5fd';
+                            textColor = '#1e3a8a';
+                            icon = 'ℹ️';
+                    }
+                    
+                    // Format timestamp
+                    const date = new Date(notification.timestamp);
+                    const timeStr = date.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                    const dateStr = date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                    });
+                    
+                    return `
+                        <div class="notification-item" 
+                             style="padding: 15px; background: ${bgColor}; border: 2px solid ${borderColor}; 
+                                    border-radius: 8px; display: flex; gap: 12px; align-items: flex-start;
+                                    animation: ${notification.read ? 'none' : 'slideIn 0.3s ease-out'};
+                                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="font-size: 20px; flex-shrink: 0;">${icon}</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: ${textColor}; font-size: 14px; margin-bottom: 4px;">
+                                    ${notification.message}
+                                </div>
+                                <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">
+                                    ${dateStr} at ${timeStr}
+                                </div>
+                            </div>
+                            ${!notification.read ? `
+                                <div style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%; 
+                                           flex-shrink: 0; margin-top: 4px;" title="Unread"></div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Called when notifications view is opened
+            viewNotifications() {
+                this.markAllAsRead();
+                this.renderNotifications();
+            }
+        }
+        
+        // Create global NotificationsManager instance
+        window.NotificationsManager = new NotificationsManager();
+        
+        // Function to check for notifications in event data (row 61)
+        window.checkEventNotifications = function() {
+            // console.log('Checking for event notifications...');
+            
+            if (!window.VanguardData) {
+                console.log('VanguardData not available');
+                return;
+            }
+            if (!window.NotificationsManager) {
+                console.log('NotificationsManager not available');
+                return;
+            }
+            
+            const events = window.VanguardData.getAllEvents();
+            // console.log('Total events to check:', events.length);
+            
+            const checkedEvents = JSON.parse(localStorage.getItem('vanguard_checked_events') || '[]');
+            console.log('Already checked events:', checkedEvents.length);
+            
+            let notificationsFound = 0;
+            
+            // Check the latest few events for debugging
+            const latestEvents = events.slice(0, 5);
+            latestEvents.forEach((event, index) => {
+                console.log(`Event ${index}:`, event.id, event.location, event.day, event.date);
+                
+                // Try different ways to get row 61
+                const row61Direct = event.getRowValue ? event.getRowValue(61) : null;
+                const row61FromColumn = event.columnData?.row61?.value;
+                const row61Alternative = event.columnData?.data?.row61?.value;
+                
+                console.log(`  Row 61 (getRowValue): "${row61Direct}"`);
+                console.log(`  Row 61 (columnData.row61): "${row61FromColumn}"`);
+                console.log(`  Row 61 (columnData.data.row61): "${row61Alternative}"`);
+            });
+            
+            events.forEach(event => {
+                // Check if we've already processed this event
+                if (checkedEvents.includes(event.id)) {
+                    return;
+                }
+                
+                // Get notification from row 61 - try multiple methods
+                let notificationText = null;
+                
+                if (event.getRowValue) {
+                    notificationText = event.getRowValue(61);
+                }
+                
+                if (!notificationText && event.columnData) {
+                    notificationText = event.columnData.row61?.value || event.columnData.data?.row61?.value;
+                }
+                
+                // console.log(`Event ${event.id} row 61:`, notificationText);
+                
+                if (notificationText && notificationText.trim() !== '' && notificationText !== '-' && notificationText !== 0) {
+                    // console.log('Adding notification for event:', event.id, 'Text:', notificationText);
+                    notificationsFound++;
+                    
+                    // Determine notification type based on content
+                    let type = 'info';
+                    const lowerText = String(notificationText).toLowerCase();
+                    if (lowerText.includes('warning') || lowerText.includes('alert')) {
+                        type = 'warning';
+                    } else if (lowerText.includes('success') || lowerText.includes('win') || lowerText.includes('record')) {
+                        type = 'success';
+                    } else if (lowerText.includes('urgent') || lowerText.includes('critical')) {
+                        type = 'alert';
+                    }
+                    
+                    // Add notification
+                    window.NotificationsManager.addNotification(
+                        String(notificationText),
+                        type,
+                        {
+                            location: event.location,
+                            day: event.day,
+                            date: event.date
+                        }
+                    );
+                    
+                    // Mark as checked
+                    checkedEvents.push(event.id);
+                }
+            });
+            
+            console.log(`Found ${notificationsFound} new notifications`);
+            
+            // Save checked events
+            localStorage.setItem('vanguard_checked_events', JSON.stringify(checkedEvents));
+        };
+        
+        // Check for notifications when data is loaded
+        setTimeout(() => {
+            window.checkEventNotifications();
+        }, 2000);
+        
+        // Manual functions for testing - DISABLED
+        // Test notifications removed to prevent data pollution
+        
+        window.clearCheckedEvents = function() {
+            console.log('Clearing checked events cache...');
+            localStorage.removeItem('vanguard_checked_events');
+            console.log('Rechecking all events for notifications...');
+            window.checkEventNotifications();
+        };
+        
+        // Update leaderboard function for HTML onchange
+        window.updateLeaderboard = function() {
+            if (window.LeaderboardManager) {
+                window.LeaderboardManager.updateLeaderboard();
+            }
+        };
+        
+        // Initialize leaderboard when switching to that view
+        window.initializeLeaderboard = function() {
+            console.log('Initializing Leaderboard view...');
+            if (window.LeaderboardManager && window.VanguardData) {
+                // Ensure data is available
+                const events = window.VanguardData.getAllEvents();
+                console.log('Events available for leaderboard:', events.length);
+                
+                // Update the leaderboard
+                window.LeaderboardManager.updateLeaderboard();
+            }
+        };
         
         // Diagnostic function to check data availability
         window.diagnoseData = function() {
@@ -4717,11 +6626,16 @@ Pool: Shows the number of historical events that match all your selected filters
             // Find and activate the clicked tab
             const tabs = document.querySelectorAll('.nav-tab');
             tabs.forEach(tab => {
-                if (tab.textContent === 'Events' && view === 'events') {
+                const tabText = tab.textContent.trim();
+                if (tabText === 'Events' && view === 'events') {
                     tab.classList.add('active');
-                } else if (tab.textContent === 'Reporting' && view === 'reporting') {
+                } else if (tabText === 'Reporting' && view === 'reporting') {
                     tab.classList.add('active');
-                } else if (tab.textContent === 'Data' && view === 'data') {
+                } else if (tabText === 'Leaderboard' && view === 'leaderboard') {
+                    tab.classList.add('active');
+                } else if (tabText.includes('Notifications') && view === 'notifications') {
+                    tab.classList.add('active');
+                } else if (tabText === 'Data' && view === 'data') {
                     tab.classList.add('active');
                 }
                 /* Commented out Monthly tab
@@ -4734,6 +6648,8 @@ Pool: Shows the number of historical events that match all your selected filters
             const monthOverMonthView = document.getElementById('month-over-month-view');
             const reportingView = document.getElementById('reporting-view');
             const dataView = document.getElementById('data-view');
+            const leaderboardView = document.getElementById('leaderboard-view');
+            const notificationsView = document.getElementById('notifications-view');
             
             // Hide all views
             if (eventsView) {
@@ -4751,6 +6667,14 @@ Pool: Shows the number of historical events that match all your selected filters
             if (dataView) {
                 dataView.style.display = 'none';
                 dataView.classList.remove('active');
+            }
+            if (leaderboardView) {
+                leaderboardView.style.display = 'none';
+                leaderboardView.classList.remove('active');
+            }
+            if (notificationsView) {
+                notificationsView.style.display = 'none';
+                notificationsView.classList.remove('active');
             }
             
             // Clean up any misplaced elements when switching views
@@ -4806,6 +6730,26 @@ Pool: Shows the number of historical events that match all your selected filters
                 dataView.style.display = 'block';
                 dataView.classList.add('active');
                 updateSheetsView(); // Populate the table when shown
+            } else if (view === 'leaderboard' && leaderboardView) {
+                console.log('Switching to Leaderboard view');
+                // Check if already on leaderboard view
+                const wasAlreadyActive = leaderboardView.classList.contains('active');
+                leaderboardView.style.display = 'block';
+                leaderboardView.classList.add('active');
+                
+                // Only initialize if not already on leaderboard
+                if (window.LeaderboardManager && !wasAlreadyActive) {
+                    window.LeaderboardManager.initialize();
+                }
+            } else if (view === 'notifications' && notificationsView) {
+                console.log('Switching to Notifications view');
+                notificationsView.style.display = 'block';
+                notificationsView.classList.add('active');
+                
+                // Mark all as read and render notifications
+                if (window.NotificationsManager) {
+                    window.NotificationsManager.viewNotifications();
+                }
             }
         }
         
@@ -5049,9 +6993,9 @@ Pool: Shows the number of historical events that match all your selected filters
             // Calculate comparison metrics from pool
             let comparisonMetrics = null;
             if (comparisonPool && comparisonPool.length > 0) {
-                console.log('[DEBUG] Calculating comparison metrics from', comparisonPool.length, 'events');
+                // console.log('[DEBUG] Calculating comparison metrics from', comparisonPool.length, 'events');
                 comparisonMetrics = calculateAverageProductMetrics(comparisonPool);
-                console.log('[DEBUG] Comparison metrics:', comparisonMetrics);
+                // console.log('[DEBUG] Comparison metrics:', comparisonMetrics);
             } else {
                 console.log('[DEBUG] No comparison pool available');
             }
@@ -5311,7 +7255,7 @@ Pool: Shows the number of historical events that match all your selected filters
             const comparisonDetailsEl = document.getElementById(`${product}ComparisonDetails`);
             
             if (!comparisonDetailsEl) {
-                console.log(`[DEBUG] No comparison details element found for ${product}`);
+                // console.log(`[DEBUG] No comparison details element found for ${product}`);
                 return;
             }
             
@@ -5343,23 +7287,23 @@ Pool: Shows the number of historical events that match all your selected filters
                     <div>Avg Margin: ${product === 'other' && (comparisonMetrics.margin < 0 || comparisonMetrics.margin > 50) ? 'N/A' : comparisonMetrics.margin.toFixed(1) + '%'}</div>
                 `;
             } else {
-                console.log(`[DEBUG] No comparison data for ${product} expansion`);
+                // console.log(`[DEBUG] No comparison data for ${product} expansion`);
                 comparisonDetailsEl.innerHTML = '<div style="color: #999;">No comparison data available - select comparison filters above</div>';
             }
         }
         
         // Initialize product box click handlers
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('[DEBUG] Initializing product box click handlers');
+            // console.log('[DEBUG] Initializing product box click handlers');
             
             // Wait a bit for the product boxes to be rendered
             setTimeout(() => {
                 const boxes = document.querySelectorAll('.product-box');
-                console.log('[DEBUG] Found', boxes.length, 'product boxes');
+                // console.log('[DEBUG] Found', boxes.length, 'product boxes');
                 
                 boxes.forEach(box => {
                     box.addEventListener('click', function(e) {
-                        console.log('[DEBUG] Product box clicked:', this.dataset.product);
+                        // console.log('[DEBUG] Product box clicked:', this.dataset.product);
                         
                         // Don't toggle if clicking on a link or button inside
                         if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
@@ -5370,7 +7314,7 @@ Pool: Shows the number of historical events that match all your selected filters
                         
                         // Check if any expansion is currently open
                         const isAnyExpanded = Array.from(allExpansions).some(exp => exp.style.display === 'block');
-                        console.log('[DEBUG] Current expansion state:', isAnyExpanded ? 'expanded' : 'collapsed');
+                        // console.log('[DEBUG] Current expansion state:', isAnyExpanded ? 'expanded' : 'collapsed');
                         
                         if (isAnyExpanded) {
                             // Close all expansions
@@ -5381,7 +7325,7 @@ Pool: Shows the number of historical events that match all your selected filters
                             allBoxes.forEach(b => {
                                 b.classList.remove('expanded');
                             });
-                            console.log('[DEBUG] All boxes collapsed');
+                            // console.log('[DEBUG] All boxes collapsed');
                         } else {
                             // Open all expansions
                             allExpansions.forEach(exp => {
@@ -5391,7 +7335,7 @@ Pool: Shows the number of historical events that match all your selected filters
                             allBoxes.forEach(b => {
                                 b.classList.add('expanded');
                             });
-                            console.log('[DEBUG] All boxes expanded');
+                            // console.log('[DEBUG] All boxes expanded');
                             
                             // Scroll to show the expanded content
                             setTimeout(() => {
@@ -10580,8 +12524,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize sound system
     AppSounds.init();
     
-    // Show v1.1.4 update notification if not already seen
-    if (!localStorage.getItem('v114_update_seen')) {
+    // Check if URL has leaderboard parameters (query params or hash)
+    const params = new URLSearchParams(window.location.search);
+    const isLeaderboardShare = params.get('view') === 'leaderboard';
+    const isHashLeaderboard = window.location.hash && window.location.hash.startsWith('#lb-');
+    
+    if (isLeaderboardShare || isHashLeaderboard) {
+        // Wait for data to load, then switch to leaderboard
+        setTimeout(() => {
+            if (window.VanguardData && window.LeaderboardManager) {
+                // Switch to leaderboard view
+                switchView('leaderboard');
+                
+                // Load the state from URL or hash
+                if (isHashLeaderboard) {
+                    window.LeaderboardManager.loadFromHash();
+                } else {
+                    window.LeaderboardManager.loadStateFromUrl();
+                }
+            }
+        }, 2500); // Wait for data to load
+    }
+    
+    // Show v1.1.4 update notification if not already seen (skip if loading shared leaderboard)
+    if (!localStorage.getItem('v114_update_seen') && !isLeaderboardShare && !isHashLeaderboard) {
         setTimeout(() => {
             showV114UpdatePrompt();
         }, 2000);
@@ -10735,8 +12701,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Function to initialize app with data
-    function initializeAppWithData() {
+    // Function to initialize app with data (moved to global scope)
+    window.initializeAppWithData = function() {
         if (window.VanguardData.data) {
             // Initialize EventManager with VanguardData
             if (window.EventManager.loadFromVanguardData()) {
@@ -10754,8 +12720,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateYTDStackedChart();
                 }, 500);
                 
-                // Show welcome popup after data loads (only once, only if we have data, and not on refresh)
-                if (window.VanguardData?.getAllEvents()?.length > 0 && !window.isDataRefresh) {
+                // Show welcome popup after data loads (only once, only if we have data, not on refresh, and not on shared leaderboard or hash leaderboard)
+                const urlParams = new URLSearchParams(window.location.search);
+                const isSharedLeaderboard = urlParams.get('view') === 'leaderboard';
+                const isHashLeaderboard = window.location.hash && window.location.hash.startsWith('#lb-');
+                
+                if (window.VanguardData?.getAllEvents()?.length > 0 && !window.isDataRefresh && !isSharedLeaderboard && !isHashLeaderboard) {
                     setTimeout(() => {
                         // Only show if not already shown
                         if (!window.welcomePopupShown) {
