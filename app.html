@@ -5909,72 +5909,9 @@ Pool: Shows the number of historical events that match all your selected filters
             
             // Initialize all event listeners for leaderboard interactive elements
             initializeEventListeners() {
-                // Add a small delay to ensure DOM is ready
-                setTimeout(() => {
-                    // Check All / Uncheck All buttons
-                    const checkAllBtn = document.getElementById('checkAllDays');
-                    const uncheckAllBtn = document.getElementById('uncheckAllDays');
-                    
-                    if (checkAllBtn) {
-                        checkAllBtn.onclick = () => {
-                            AppSounds.play('click');
-                            this.checkAllDays();
-                        };
-                        console.log('Check All button listener attached');
-                    }
-                    
-                    if (uncheckAllBtn) {
-                        uncheckAllBtn.onclick = () => {
-                            AppSounds.play('click');
-                            this.uncheckAllDays();
-                        };
-                        console.log('Uncheck All button listener attached');
-                    }
-                    
-                    // Day checkboxes - use more specific selection
-                    const dayCheckboxes = document.querySelectorAll('#leaderboard-view input[type="checkbox"][id^="day"]');
-                    dayCheckboxes.forEach(checkbox => {
-                        const day = checkbox.id.replace('day', '');
-                        checkbox.onchange = () => {
-                            AppSounds.play('click');
-                            this.toggleDay(day);
-                        };
-                    });
-                    console.log(`Attached listeners to ${dayCheckboxes.length} day checkboxes`);
-                    
-                    // Period buttons
-                    const periodBtns = document.querySelectorAll('#leaderboard-view .period-btn');
-                    periodBtns.forEach(btn => {
-                        btn.onclick = (e) => {
-                            AppSounds.play('click');
-                            this.setPeriod(btn.dataset.period);
-                        };
-                    });
-                    console.log(`Attached listeners to ${periodBtns.length} period buttons`);
-                    
-                    // Location buttons  
-                    const locationBtns = document.querySelectorAll('#leaderboard-view .location-btn');
-                    locationBtns.forEach(btn => {
-                        btn.onclick = (e) => {
-                            AppSounds.play('click');
-                            const location = btn.textContent === 'Combined' ? 'combined' : btn.textContent;
-                            this.setLocation(location);
-                        };
-                    });
-                    console.log(`Attached listeners to ${locationBtns.length} location buttons`);
-                    
-                    // Aspect dropdown
-                    const aspectDropdown = document.getElementById('leaderboardAspect');
-                    if (aspectDropdown) {
-                        aspectDropdown.onchange = (e) => {
-                            AppSounds.play('shuffle');
-                            this.animateAndUpdate();
-                        };
-                        console.log('Aspect dropdown listener attached');
-                    }
-                    
-                    console.log('All leaderboard event listeners initialized for shared URL');
-                }, 100); // Small delay to ensure DOM is ready
+                // NO LONGER NEEDED - HTML already has onclick handlers
+                // This was causing conflicts and technical debt
+                console.log('Event listeners already defined in HTML - skipping reinitialization');
             }
             
             // Load state from URL parameters
@@ -6148,6 +6085,32 @@ Pool: Shows the number of historical events that match all your selected filters
         
         // Create global LeaderboardManager instance
         window.LeaderboardManager = new LeaderboardManager();
+        
+        // Debug function to check what's available
+        window.debugLeaderboard = function() {
+            console.log('=== LEADERBOARD DEBUG ===');
+            console.log('LeaderboardManager exists:', !!window.LeaderboardManager);
+            console.log('Methods available:', {
+                checkAllDays: typeof window.LeaderboardManager?.checkAllDays,
+                uncheckAllDays: typeof window.LeaderboardManager?.uncheckAllDays,
+                updateDayFilter: typeof window.LeaderboardManager?.updateDayFilter,
+                setPeriod: typeof window.LeaderboardManager?.setPeriod,
+                setLocation: typeof window.LeaderboardManager?.setLocation,
+                setAspect: typeof window.LeaderboardManager?.setAspect
+            });
+            console.log('Current state:', {
+                period: window.LeaderboardManager?.period,
+                location: window.LeaderboardManager?.location,
+                aspect: window.LeaderboardManager?.aspect,
+                selectedDays: window.LeaderboardManager?.selectedDays
+            });
+            console.log('Checkboxes found:', {
+                Mon: !!document.getElementById('dayMon'),
+                Tue: !!document.getElementById('dayTue'),
+                CheckAllBtn: !!document.querySelector('[onclick*="checkAllDays"]'),
+                UncheckAllBtn: !!document.querySelector('[onclick*="uncheckAllDays"]')
+            });
+        };
         
         // ============================================================
         // NOTIFICATIONS MANAGER
