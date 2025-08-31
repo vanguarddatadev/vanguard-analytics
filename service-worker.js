@@ -1,7 +1,7 @@
 // Service Worker for Vanguard Bingo Analytics PWA
-const VERSION = '1.5'; // Version 1.5 - Added Leaderboard feature and Notifications placeholder
+const VERSION = '1.5.1'; // Version 1.5.1 - Fixed shared URL blocking issues
 const CACHE_NAME = `vanguard-v${VERSION}`;
-const DATA_CACHE_NAME = 'vanguard-data-v1.5'; // Force refresh for new version // Force data refresh with version update
+const DATA_CACHE_NAME = 'vanguard-data-v1.5.1'; // Force refresh for new version // Force data refresh with version update
 
 // Files to cache for offline use - using relative paths for GitHub Pages
 const urlsToCache = [

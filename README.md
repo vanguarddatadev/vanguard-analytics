@@ -1,7 +1,8 @@
 # Vanguard Bingo Analytics PWA
 
 ## Files in this folder
-- `index.html` - Main application (renamed from vanguard-analytics-complete-v3.html)
+- `app.html` - Main application with advanced leaderboard and sharing features
+- `index.html` - Landing page (redirects to app.html)
 - `manifest.json` - PWA configuration file
 - `service-worker.js` - Enables offline functionality
 - `vanguard_logo.png` - App icon
@@ -51,6 +52,10 @@ https://[your-github-username].github.io/vanguard-analytics/
 - ✅ Installable as app on desktop and mobile
 - ✅ Works offline with cached data
 - ✅ Auto-updates from Google Sheets when online
+- ✅ Advanced Leaderboard with URL sharing
+- ✅ Hash-based shortened URLs for easy sharing
+- ✅ Smart notification system
+- ✅ Enhanced event navigation
 - ✅ Responsive design for all screen sizes
 - ✅ No server needed - runs entirely in browser
 
@@ -78,4 +83,12 @@ The app pulls data from your Google Sheets via the Apps Script URL embedded in t
 For issues, check the browser console (F12) for error messages.
 
 ## Version
-v1.0.0 - Initial PWA release
+v1.5 - Enhanced with advanced leaderboard, URL sharing, and improved user experience
+
+### New in v1.5:
+- ✨ Advanced Leaderboard with customizable filters
+- 🔗 URL sharing system with hash-based shortened URLs
+- 📱 Smart notification system
+- 🎯 Enhanced event navigation and selection
+- 🚀 Improved performance and user experience
+- 🔄 Streamlined data loading and caching
