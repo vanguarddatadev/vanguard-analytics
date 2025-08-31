@@ -6112,6 +6112,116 @@ Pool: Shows the number of historical events that match all your selected filters
             });
         };
         
+        // Function to find what's blocking clicks
+        window.findBlockingElements = function() {
+            console.log('=== FINDING BLOCKING ELEMENTS ===');
+            
+            // Get the check all button position
+            const checkAllBtn = document.querySelector('[onclick*="checkAllDays"]');
+            if (!checkAllBtn) {
+                console.log('Check All button not found');
+                return;
+            }
+            
+            const rect = checkAllBtn.getBoundingClientRect();
+            console.log('Check All button position:', rect);
+            
+            // Check what element is at that position
+            const elementAtPoint = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+            console.log('Element at button center:', elementAtPoint);
+            
+            // Find all elements with high z-index
+            const allElements = document.querySelectorAll('*');
+            const highZIndexElements = [];
+            
+            allElements.forEach(el => {
+                const style = window.getComputedStyle(el);
+                const zIndex = parseInt(style.zIndex);
+                
+                if (zIndex > 100) {
+                    highZIndexElements.push({
+                        element: el,
+                        zIndex: zIndex,
+                        id: el.id,
+                        className: el.className,
+                        display: style.display,
+                        position: style.position,
+                        visibility: style.visibility,
+                        pointerEvents: style.pointerEvents
+                    });
+                }
+            });
+            
+            console.log('High z-index elements:', highZIndexElements);
+            
+            // Find all fixed/absolute positioned elements
+            const positionedElements = [];
+            allElements.forEach(el => {
+                const style = window.getComputedStyle(el);
+                if (style.position === 'fixed' || style.position === 'absolute') {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        positionedElements.push({
+                            element: el,
+                            position: style.position,
+                            zIndex: style.zIndex,
+                            id: el.id,
+                            className: el.className,
+                            display: style.display,
+                            rect: rect
+                        });
+                    }
+                }
+            });
+            
+            console.log('Positioned elements:', positionedElements);
+            
+            return { highZIndexElements, positionedElements };
+        };
+        
+        // Aggressive function to clear all blocking elements
+        window.clearAllBlockingElements = function() {
+            console.log('=== CLEARING ALL BLOCKING ELEMENTS ===');
+            
+            // Remove all overlays and popups
+            const selectorsToHide = [
+                '.welcome-overlay',
+                '.welcome-popup',
+                '[id*="overlay"]',
+                '[id*="Overlay"]',
+                '[id*="popup"]',
+                '[id*="Popup"]',
+                '[id*="modal"]',
+                '[id*="Modal"]',
+                '[class*="overlay"]',
+                '[class*="popup"]',
+                '[class*="modal"]'
+            ];
+            
+            selectorsToHide.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    if (el.id !== 'leaderboard-view' && !el.closest('#leaderboard-view')) {
+                        el.style.display = 'none';
+                        el.style.visibility = 'hidden';
+                        el.style.pointerEvents = 'none';
+                        el.classList.remove('show', 'active');
+                    }
+                });
+            });
+            
+            // Reset z-index for any high z-index elements not in leaderboard
+            document.querySelectorAll('*').forEach(el => {
+                const style = window.getComputedStyle(el);
+                const zIndex = parseInt(style.zIndex);
+                
+                if (zIndex > 1000 && !el.closest('#leaderboard-view')) {
+                    el.style.zIndex = '1';
+                }
+            });
+            
+            console.log('Cleared all potential blocking elements');
+        };
+        
         // ============================================================
         // NOTIFICATIONS MANAGER
         // ============================================================
@@ -12696,42 +12806,64 @@ document.addEventListener('DOMContentLoaded', function() {
     const isHashLeaderboard = window.location.hash && window.location.hash.startsWith('#lb-');
     
     if (isLeaderboardShare || isHashLeaderboard) {
-        // Immediately hide all overlays and popups that might block interaction
+        // Immediately hide welcome popup and event loading elements
         const hideBlockingElements = () => {
-            // Hide all overlays
-            document.querySelectorAll('.welcome-overlay').forEach(overlay => {
-                overlay.style.display = 'none';
-                overlay.classList.remove('show');
+            // Hide the welcome popup and overlay
+            const welcomeOverlay = document.getElementById('welcomeOverlay');
+            const welcomePopup = document.getElementById('welcomePopup');
+            
+            if (welcomeOverlay) {
+                welcomeOverlay.style.display = 'none';
+                welcomeOverlay.remove(); // Completely remove it
+            }
+            
+            if (welcomePopup) {
+                welcomePopup.style.display = 'none';
+                welcomePopup.remove(); // Completely remove it
+            }
+            
+            // Hide any event loading elements
+            const loadingElements = document.querySelectorAll('[class*="loading"], [id*="loading"]');
+            loadingElements.forEach(el => {
+                el.style.display = 'none';
             });
             
-            // Hide all popups
-            document.querySelectorAll('.welcome-popup').forEach(popup => {
-                popup.style.display = 'none';
-                popup.classList.remove('show');
+            // Hide install/update prompts
+            const installElements = document.querySelectorAll('[class*="install"], [id*="install"], [class*="update"], .update-popup');
+            installElements.forEach(el => {
+                el.style.display = 'none';
+                el.remove();
             });
             
-            // Specifically hide known problematic elements
-            const elementsToHide = [
-                'welcomeOverlay', 'welcomePopup',
-                'refreshOverlay', 'refreshPopup', 
-                'successOverlay', 'successPopup'
-            ];
-            
-            elementsToHide.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.style.display = 'none';
-                    el.classList.remove('show');
+            // Specifically remove v1.5 update prompt if it exists
+            const updatePrompts = document.querySelectorAll('[onclick*="v15_update_seen"]');
+            updatePrompts.forEach(el => {
+                if (el.parentElement) {
+                    el.parentElement.style.display = 'none';
+                    el.parentElement.remove();
                 }
             });
             
-            console.log('Cleared all blocking overlays for shared URL');
+            console.log('Removed welcome popup, install prompts, and event loading elements');
         };
         
         // Hide immediately and after a delay to be sure
         hideBlockingElements();
         setTimeout(hideBlockingElements, 500);
         setTimeout(hideBlockingElements, 1500);
+        
+        // Also use the aggressive clearing function
+        setTimeout(() => {
+            if (window.clearAllBlockingElements) {
+                window.clearAllBlockingElements();
+            }
+        }, 100);
+        
+        setTimeout(() => {
+            if (window.clearAllBlockingElements) {
+                window.clearAllBlockingElements();
+            }
+        }, 2000);
         
         // Store the leaderboard loading intent
         window.pendingLeaderboardLoad = {
