@@ -1,7 +1,7 @@
 // Service Worker for Vanguard Bingo Analytics PWA
-const VERSION = '1.5.1'; // Version 1.5.1 - Fixed shared URL blocking issues
+const VERSION = '1.5.1'; // Version 1.5.1 - Fixed shared URL blocking and aggressive update detection
 const CACHE_NAME = `vanguard-v${VERSION}`;
-const DATA_CACHE_NAME = 'vanguard-data-v1.5.1'; // Force refresh for new version // Force data refresh with version update
+const DATA_CACHE_NAME = `vanguard-data-v${VERSION}`; // Force data refresh with version update
 
 // Files to cache for offline use - using relative paths for GitHub Pages
 const urlsToCache = [
@@ -13,14 +13,26 @@ const urlsToCache = [
 
 // Install event - cache essential files
 self.addEventListener('install', event => {
+  console.log('Service Worker installing version:', VERSION);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .then(() => {
+        // Notify all clients about the new version
+        return self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'NEW_VERSION_AVAILABLE',
+              version: VERSION
+            });
+          });
+        });
+      })
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Force immediate activation
 });
 
 // Activate event - clean up old caches
@@ -35,6 +47,16 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+      // Force reload all clients after activation
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SERVICE_WORKER_ACTIVATED',
+            version: VERSION
+          });
+        });
+      });
     })
   );
   self.clients.claim();
