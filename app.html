@@ -12696,6 +12696,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const isHashLeaderboard = window.location.hash && window.location.hash.startsWith('#lb-');
     
     if (isLeaderboardShare || isHashLeaderboard) {
+        // Immediately hide all overlays and popups that might block interaction
+        const hideBlockingElements = () => {
+            // Hide all overlays
+            document.querySelectorAll('.welcome-overlay').forEach(overlay => {
+                overlay.style.display = 'none';
+                overlay.classList.remove('show');
+            });
+            
+            // Hide all popups
+            document.querySelectorAll('.welcome-popup').forEach(popup => {
+                popup.style.display = 'none';
+                popup.classList.remove('show');
+            });
+            
+            // Specifically hide known problematic elements
+            const elementsToHide = [
+                'welcomeOverlay', 'welcomePopup',
+                'refreshOverlay', 'refreshPopup', 
+                'successOverlay', 'successPopup'
+            ];
+            
+            elementsToHide.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = 'none';
+                    el.classList.remove('show');
+                }
+            });
+            
+            console.log('Cleared all blocking overlays for shared URL');
+        };
+        
+        // Hide immediately and after a delay to be sure
+        hideBlockingElements();
+        setTimeout(hideBlockingElements, 500);
+        setTimeout(hideBlockingElements, 1500);
+        
         // Store the leaderboard loading intent
         window.pendingLeaderboardLoad = {
             isHash: isHashLeaderboard,
