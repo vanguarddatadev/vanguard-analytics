@@ -4894,13 +4894,21 @@ Pool: Shows the number of historical events that match all your selected filters
                 this.initialized = false;
             }
             
-            initialize() {
-                console.log('Initializing LeaderboardManager');
-                // Always re-check the last event when switching to leaderboard view
-                this.initializeFromLastEvent();
+            initialize(skipStateReset = false) {
+                console.log('Initializing LeaderboardManager, skipStateReset:', skipStateReset);
+                
+                // Only initialize from last event if we're not loading from a shared URL
+                if (!skipStateReset && !window.location.hash.startsWith('#lb-')) {
+                    // Always re-check the last event when switching to leaderboard view
+                    this.initializeFromLastEvent();
+                }
+                
                 if (!this.initialized) {
                     this.initialized = true;
+                    // Always set up event listeners when first initialized
+                    this.initializeEventListeners();
                 }
+                
                 // Don't animate on initial load - just update
                 this.updateLeaderboard();
             }
@@ -5890,7 +5898,10 @@ Pool: Shows the number of historical events that match all your selected filters
                 }
                 
                 // Reinitialize event listeners for interactive elements
-                this.initializeEventListeners();
+                // Add a delay to ensure DOM is ready
+                setTimeout(() => {
+                    this.initializeEventListeners();
+                }, 300);
                 
                 this.updateLeaderboard();
                 return true;
@@ -6929,7 +6940,9 @@ Pool: Shows the number of historical events that match all your selected filters
                 
                 // Only initialize if not already on leaderboard
                 if (window.LeaderboardManager && !wasAlreadyActive) {
-                    window.LeaderboardManager.initialize();
+                    // Skip state reset if we're loading from a hash URL
+                    const skipReset = window.location.hash.startsWith('#lb-') || window.pendingLeaderboardLoad;
+                    window.LeaderboardManager.initialize(skipReset);
                 }
             } else if (view === 'notifications' && notificationsView) {
                 console.log('Switching to Notifications view');
