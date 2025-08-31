@@ -1619,38 +1619,121 @@
             },
             
             playCardShuffle() {
-                // Multiple quick overlapping swoosh sounds to simulate card shuffling
-                for (let i = 0; i < 5; i++) {
+                // Create a realistic riffle shuffle sound with multiple layers
+                try {
+                    const now = this.audioContext.currentTime;
+                    
+                    // Layer 1: Rapid clicking sounds (cards hitting each other)
+                    for (let i = 0; i < 12; i++) {
+                        setTimeout(() => {
+                            // Create click sound
+                            const osc = this.audioContext.createOscillator();
+                            const gain = this.audioContext.createGain();
+                            const filter = this.audioContext.createBiquadFilter();
+                            
+                            // Bandpass filter for crisp click
+                            filter.type = 'bandpass';
+                            filter.frequency.value = 2000 + Math.random() * 1000;
+                            filter.Q.value = 10;
+                            
+                            osc.type = 'square';
+                            osc.frequency.value = 200 + Math.random() * 100;
+                            
+                            // Very short envelope for click
+                            gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                            gain.gain.linearRampToValueAtTime(this.volume * 0.05, this.audioContext.currentTime + 0.001);
+                            gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.01);
+                            
+                            osc.connect(filter);
+                            filter.connect(gain);
+                            gain.connect(this.audioContext.destination);
+                            
+                            osc.start();
+                            osc.stop(this.audioContext.currentTime + 0.01);
+                        }, i * 15); // Rapid succession
+                    }
+                    
+                    // Layer 2: Swoosh sounds (cards sliding)
+                    for (let i = 0; i < 2; i++) {
+                        setTimeout(() => {
+                            const bufferSize = this.audioContext.sampleRate * 0.15;
+                            const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                            const output = buffer.getChannelData(0);
+                            
+                            // Generate filtered noise
+                            for (let j = 0; j < bufferSize; j++) {
+                                output[j] = (Math.random() * 2 - 1) * Math.exp(-j / bufferSize * 2);
+                            }
+                            
+                            const noise = this.audioContext.createBufferSource();
+                            noise.buffer = buffer;
+                            
+                            // Lowpass for swoosh
+                            const filter = this.audioContext.createBiquadFilter();
+                            filter.type = 'lowpass';
+                            filter.frequency.value = 800 + (i * 300);
+                            filter.Q.value = 1;
+                            
+                            const gain = this.audioContext.createGain();
+                            gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                            gain.gain.linearRampToValueAtTime(this.volume * 0.08, this.audioContext.currentTime + 0.03);
+                            gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.15);
+                            
+                            noise.connect(filter);
+                            filter.connect(gain);
+                            gain.connect(this.audioContext.destination);
+                            
+                            noise.start();
+                            noise.stop(this.audioContext.currentTime + 0.15);
+                        }, 50 + (i * 100));
+                    }
+                    
+                    // Layer 3: Flutter effect (cards settling)
                     setTimeout(() => {
                         const osc = this.audioContext.createOscillator();
                         const gain = this.audioContext.createGain();
-                        const filter = this.audioContext.createBiquadFilter();
+                        const lfo = this.audioContext.createOscillator();
+                        const lfoGain = this.audioContext.createGain();
                         
-                        filter.type = 'bandpass';
-                        filter.frequency.value = 800 + Math.random() * 400;
-                        filter.Q.value = 2;
+                        // LFO for flutter
+                        lfo.frequency.value = 25;
+                        lfoGain.gain.value = 50;
+                        lfo.connect(lfoGain);
+                        lfoGain.connect(osc.frequency);
                         
-                        osc.connect(filter);
-                        filter.connect(gain);
+                        osc.type = 'triangle';
+                        osc.frequency.value = 400;
+                        
+                        gain.gain.setValueAtTime(this.volume * 0.03, this.audioContext.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+                        
+                        osc.connect(gain);
                         gain.connect(this.audioContext.destination);
                         
-                        osc.type = 'noise';
-                        // Create noise by using multiple oscillators with random frequencies
-                        const noise = this.audioContext.createOscillator();
-                        noise.type = 'sawtooth';
-                        noise.frequency.value = Math.random() * 2000 + 500;
-                        noise.connect(filter);
-                        
-                        gain.gain.value = this.volume * 0.08;
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.15);
-                        
-                        osc.frequency.value = Math.random() * 200 + 100;
+                        lfo.start();
                         osc.start();
-                        noise.start();
-                        osc.stop(this.audioContext.currentTime + 0.15);
-                        noise.stop(this.audioContext.currentTime + 0.15);
-                    }, i * 30);
+                        lfo.stop(this.audioContext.currentTime + 0.3);
+                        osc.stop(this.audioContext.currentTime + 0.3);
+                    }, 180);
+                    
+                } catch (error) {
+                    console.log('Shuffle sound failed:', error);
+                    // Fallback simple beep
+                    this.playSimpleBeep(400, 0.1);
                 }
+            },
+            
+            playSimpleBeep(frequency = 400, duration = 0.1) {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                osc.type = 'sine';
+                osc.frequency.value = frequency;
+                gain.gain.value = this.volume * 0.3;
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                osc.start();
+                osc.stop(this.audioContext.currentTime + duration);
             },
             
             playWelcomeChime() {
@@ -5490,7 +5573,8 @@ Pool: Shows the number of historical events that match all your selected filters
                     return `
                         <div ${clickHandler} style="background: ${color}; 
                                   border: 1px solid ${color}; border-radius: 3px; padding: 3px 5px; 
-                                  min-width: 60px; flex: 1; ${cursor}">
+                                  min-width: 60px; flex: 1; ${cursor}"
+                             title="Click to sort by ${label}">
                             <div style="font-size: 7px; color: white; font-weight: 600; text-transform: uppercase; pointer-events: none;">
                                 ${label}
                             </div>
@@ -5505,8 +5589,9 @@ Pool: Shows the number of historical events that match all your selected filters
                         <div ${clickHandler} style="background: ${color}15; 
                                   border: 1px solid ${color}40; border-radius: 3px; padding: 3px 5px; 
                                   min-width: 60px; flex: 1; ${cursor}"
-                             onmouseover="this.style.background='${color}25'"
-                             onmouseout="this.style.background='${color}15'">
+                             onmouseover="this.style.background='${color}25'; this.style.transform='scale(1.02)'"
+                             onmouseout="this.style.background='${color}15'; this.style.transform='scale(1)'"
+                             title="Click to sort by ${label}">
                             <div style="font-size: 7px; color: ${color}; font-weight: 500; text-transform: uppercase; pointer-events: none;">
                                 ${label}
                             </div>
@@ -5519,6 +5604,7 @@ Pool: Shows the number of historical events that match all your selected filters
             }
             
             setAspect(aspect) {
+                console.log('Setting leaderboard aspect to:', aspect);
                 // Prevent default click sound since we're playing shuffle
                 event?.stopPropagation?.();
                 AppSounds.play('shuffle'); // Play shuffle sound
@@ -5685,7 +5771,16 @@ Pool: Shows the number of historical events that match all your selected filters
                     parts.push(activeDays.join(''));
                 }
                 
-                const baseUrl = window.location.origin + window.location.pathname;
+                // Detect if running locally and use GitHub URL for sharing
+                let baseUrl;
+                if (window.location.protocol === 'file:') {
+                    // Running locally - use GitHub hosted URL
+                    baseUrl = 'https://vanguarddatadev.github.io/vanguard-analytics/app.html';
+                } else {
+                    // Running on web - use current URL
+                    baseUrl = window.location.origin + window.location.pathname;
+                }
+                
                 return `${baseUrl}#${parts.join('-')}`;
             }
             
@@ -5794,8 +5889,71 @@ Pool: Shows the number of historical events that match all your selected filters
                     if (checkbox) checkbox.checked = selected;
                 }
                 
+                // Reinitialize event listeners for interactive elements
+                this.initializeEventListeners();
+                
                 this.updateLeaderboard();
                 return true;
+            }
+            
+            // Initialize all event listeners for leaderboard interactive elements
+            initializeEventListeners() {
+                // Check All / Uncheck All buttons
+                const checkAllBtn = document.getElementById('checkAllDays');
+                const uncheckAllBtn = document.getElementById('uncheckAllDays');
+                
+                if (checkAllBtn) {
+                    checkAllBtn.onclick = () => {
+                        AppSounds.play('click');
+                        this.checkAllDays();
+                    };
+                }
+                
+                if (uncheckAllBtn) {
+                    uncheckAllBtn.onclick = () => {
+                        AppSounds.play('click');
+                        this.uncheckAllDays();
+                    };
+                }
+                
+                // Day checkboxes
+                for (const day of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'SatEarly', 'SatLate', 'SunEarly', 'SunLate']) {
+                    const checkbox = document.getElementById('day' + day);
+                    if (checkbox) {
+                        checkbox.onchange = () => {
+                            AppSounds.play('click');
+                            this.toggleDay(day);
+                        };
+                    }
+                }
+                
+                // Period buttons
+                document.querySelectorAll('#leaderboard-view .period-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        AppSounds.play('click');
+                        this.setPeriod(e.target.dataset.period);
+                    };
+                });
+                
+                // Location buttons  
+                document.querySelectorAll('#leaderboard-view .location-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        AppSounds.play('click');
+                        const location = e.target.textContent === 'Combined' ? 'combined' : e.target.textContent;
+                        this.setLocation(location);
+                    };
+                });
+                
+                // Aspect dropdown
+                const aspectDropdown = document.getElementById('leaderboardAspect');
+                if (aspectDropdown) {
+                    aspectDropdown.onchange = (e) => {
+                        AppSounds.play('shuffle');
+                        this.animateAndUpdate();
+                    };
+                }
+                
+                console.log('Leaderboard event listeners reinitialized for shared URL');
             }
             
             // Load state from URL parameters
@@ -5852,6 +6010,9 @@ Pool: Shows the number of historical events that match all your selected filters
                         }
                     });
                 }
+                
+                // Reinitialize event listeners for interactive elements
+                this.initializeEventListeners();
                 
                 // Update the leaderboard with loaded state
                 this.updateLeaderboard();
@@ -6283,20 +6444,39 @@ Pool: Shows the number of historical events that match all your selected filters
             localStorage.setItem('vanguard_checked_events', JSON.stringify(checkedEvents));
         };
         
-        // Check for notifications when data is loaded
-        setTimeout(() => {
-            window.checkEventNotifications();
-        }, 2000);
+        // Check for notifications when data is loaded - DISABLED
+        // User requested no notifications be added automatically
+        // setTimeout(() => {
+        //     window.checkEventNotifications();
+        // }, 2000);
         
-        // Manual functions for testing - DISABLED
+        // Manual functions for testing - COMPLETELY DISABLED
         // Test notifications removed to prevent data pollution
+        // NO NOTIFICATIONS WILL BE ADDED FROM CODE
         
         window.clearCheckedEvents = function() {
             console.log('Clearing checked events cache...');
             localStorage.removeItem('vanguard_checked_events');
-            console.log('Rechecking all events for notifications...');
-            window.checkEventNotifications();
+            console.log('Auto notifications are disabled');
+            // window.checkEventNotifications(); // DISABLED - no auto notifications
         };
+        
+        // Function to clear all garbage notifications
+        window.clearAllNotifications = function() {
+            console.log('Clearing all notifications...');
+            if (window.NotificationsManager) {
+                window.NotificationsManager.clearAll();
+                console.log('All notifications cleared');
+            }
+        };
+        
+        // Automatically clear any existing notifications on load to remove garbage
+        setTimeout(() => {
+            if (window.NotificationsManager) {
+                window.NotificationsManager.clearAll();
+                console.log('Cleared any existing garbage notifications on startup');
+            }
+        }, 1000);
         
         // Update leaderboard function for HTML onchange
         window.updateLeaderboard = function() {
