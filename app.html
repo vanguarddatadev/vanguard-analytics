@@ -12394,8 +12394,8 @@ Hover over individual metrics for detailed averages.`)}
             document.body.appendChild(updateBar);
         };
         
-        // Show v1.1.4 specific update prompt
-        window.showV114UpdatePrompt = function() {
+        // Show v1.5 specific update prompt
+        window.showV15UpdatePrompt = function() {
             const popup = document.createElement('div');
             popup.className = 'update-popup';
             popup.style.cssText = `
@@ -12416,16 +12416,16 @@ Hover over individual metrics for detailed averages.`)}
             `;
             
             popup.innerHTML = `
-                <h2 style="margin-bottom: 15px; font-size: 24px;">🎉 Version 1.1.4 Available!</h2>
+                <h2 style="margin-bottom: 15px; font-size: 24px;">🎉 Version 1.5 Available!</h2>
                 <div style="margin-bottom: 20px; text-align: left; font-size: 14px; line-height: 1.6;">
                     <strong>What's New:</strong><br>
-                    • Added RPA metrics to product boxes<br>
-                    • RPA breakdown by Flash & Strip products<br>
-                    • Fixed projection date calculations for 2025<br>
-                    • Improved tooltip accuracy<br>
-                    • Enhanced product performance tracking
+                    • Advanced Leaderboard with URL sharing<br>
+                    • Hash-based shortened URLs for easy sharing<br>
+                    • Smart notification system<br>
+                    • Enhanced event navigation<br>
+                    • Improved user experience and performance
                 </div>
-                <button onclick="this.parentElement.style.display='none'; location.reload();" style="
+                <button onclick="localStorage.setItem('v15_update_seen', 'true'); this.parentElement.style.display='none'; location.reload();" style="
                     background: white;
                     color: #2563eb;
                     border: none;
@@ -12436,7 +12436,7 @@ Hover over individual metrics for detailed averages.`)}
                     cursor: pointer;
                     margin-right: 10px;
                 ">Update Now</button>
-                <button onclick="this.parentElement.remove(); localStorage.setItem('v114_update_seen', 'true');" style="
+                <button onclick="this.parentElement.remove(); localStorage.setItem('v15_update_seen', 'true');" style="
                     background: transparent;
                     color: white;
                     border: 2px solid white;
@@ -12456,7 +12456,7 @@ Hover over individual metrics for detailed averages.`)}
             }, 10);
             
             // Mark as seen if they don't click
-            localStorage.setItem('v114_update_seen', 'true');
+            localStorage.setItem('v15_update_seen', 'true');
         };
         
         // Show error popup
@@ -12530,26 +12530,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const isHashLeaderboard = window.location.hash && window.location.hash.startsWith('#lb-');
     
     if (isLeaderboardShare || isHashLeaderboard) {
-        // Wait for data to load, then switch to leaderboard
-        setTimeout(() => {
-            if (window.VanguardData && window.LeaderboardManager) {
+        // Store the leaderboard loading intent
+        window.pendingLeaderboardLoad = {
+            isHash: isHashLeaderboard,
+            attempts: 0,
+            maxAttempts: 10
+        };
+        
+        // Function to attempt leaderboard loading
+        const attemptLeaderboardLoad = () => {
+            if (window.VanguardData && window.LeaderboardManager && window.VanguardData.getAllEvents().length > 0) {
+                console.log('Data loaded! Switching to leaderboard with filters...');
                 // Switch to leaderboard view
                 switchView('leaderboard');
                 
                 // Load the state from URL or hash
-                if (isHashLeaderboard) {
+                if (window.pendingLeaderboardLoad.isHash) {
                     window.LeaderboardManager.loadFromHash();
                 } else {
                     window.LeaderboardManager.loadStateFromUrl();
                 }
+                window.pendingLeaderboardLoad = null; // Clear the pending load
+                return true; // Success
             }
-        }, 2500); // Wait for data to load
+            
+            window.pendingLeaderboardLoad.attempts++;
+            if (window.pendingLeaderboardLoad.attempts >= window.pendingLeaderboardLoad.maxAttempts) {
+                console.error('Failed to load leaderboard after multiple attempts - check network connection');
+                window.pendingLeaderboardLoad = null;
+                return false;
+            }
+            
+            console.log(`Data not ready yet (attempt ${window.pendingLeaderboardLoad.attempts}), waiting for data load event...`);
+            return false; // Data not ready yet
+        };
+        
+        // Try immediate load first
+        setTimeout(attemptLeaderboardLoad, 1000);
+        
+        // Set up a polling fallback every 3 seconds in case events don't fire
+        const pollInterval = setInterval(() => {
+            if (!window.pendingLeaderboardLoad) {
+                clearInterval(pollInterval);
+                return;
+            }
+            attemptLeaderboardLoad();
+        }, 3000);
     }
     
-    // Show v1.1.4 update notification if not already seen (skip if loading shared leaderboard)
-    if (!localStorage.getItem('v114_update_seen') && !isLeaderboardShare && !isHashLeaderboard) {
+    // Show v1.5 update notification if not already seen (skip if loading shared leaderboard)
+    if (!localStorage.getItem('v15_update_seen') && !isLeaderboardShare && !isHashLeaderboard) {
         setTimeout(() => {
-            showV114UpdatePrompt();
+            showV15UpdatePrompt();
         }, 2000);
     }
     
@@ -12706,6 +12738,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.VanguardData.data) {
             // Initialize EventManager with VanguardData
             if (window.EventManager.loadFromVanguardData()) {
+                
+                // Check if we have a pending leaderboard load from hash URL
+                if (window.pendingLeaderboardLoad && window.VanguardData.getAllEvents().length > 0) {
+                    console.log('Data now available! Loading pending leaderboard...');
+                    setTimeout(() => {
+                        switchView('leaderboard');
+                        if (window.pendingLeaderboardLoad.isHash) {
+                            window.LeaderboardManager.loadFromHash();
+                        } else {
+                            window.LeaderboardManager.loadStateFromUrl();
+                        }
+                        window.pendingLeaderboardLoad = null; // Clear the pending load
+                    }, 100);
+                }
                 // Select and display latest event
                 window.EventManager.selectEvent('latest');
                 
