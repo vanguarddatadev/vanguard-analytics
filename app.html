@@ -48,7 +48,9 @@
         // Service Worker registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
+                // Add timestamp to force check for new service worker
+                const swUrl = './service-worker.js?v=1.5.1&t=' + Date.now();
+                navigator.serviceWorker.register(swUrl)
                     .then(registration => {
                         console.log('ServiceWorker registered:', registration);
                         
