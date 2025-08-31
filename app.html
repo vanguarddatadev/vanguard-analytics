@@ -5898,62 +5898,72 @@ Pool: Shows the number of historical events that match all your selected filters
             
             // Initialize all event listeners for leaderboard interactive elements
             initializeEventListeners() {
-                // Check All / Uncheck All buttons
-                const checkAllBtn = document.getElementById('checkAllDays');
-                const uncheckAllBtn = document.getElementById('uncheckAllDays');
-                
-                if (checkAllBtn) {
-                    checkAllBtn.onclick = () => {
-                        AppSounds.play('click');
-                        this.checkAllDays();
-                    };
-                }
-                
-                if (uncheckAllBtn) {
-                    uncheckAllBtn.onclick = () => {
-                        AppSounds.play('click');
-                        this.uncheckAllDays();
-                    };
-                }
-                
-                // Day checkboxes
-                for (const day of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'SatEarly', 'SatLate', 'SunEarly', 'SunLate']) {
-                    const checkbox = document.getElementById('day' + day);
-                    if (checkbox) {
+                // Add a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    // Check All / Uncheck All buttons
+                    const checkAllBtn = document.getElementById('checkAllDays');
+                    const uncheckAllBtn = document.getElementById('uncheckAllDays');
+                    
+                    if (checkAllBtn) {
+                        checkAllBtn.onclick = () => {
+                            AppSounds.play('click');
+                            this.checkAllDays();
+                        };
+                        console.log('Check All button listener attached');
+                    }
+                    
+                    if (uncheckAllBtn) {
+                        uncheckAllBtn.onclick = () => {
+                            AppSounds.play('click');
+                            this.uncheckAllDays();
+                        };
+                        console.log('Uncheck All button listener attached');
+                    }
+                    
+                    // Day checkboxes - use more specific selection
+                    const dayCheckboxes = document.querySelectorAll('#leaderboard-view input[type="checkbox"][id^="day"]');
+                    dayCheckboxes.forEach(checkbox => {
+                        const day = checkbox.id.replace('day', '');
                         checkbox.onchange = () => {
                             AppSounds.play('click');
                             this.toggleDay(day);
                         };
+                    });
+                    console.log(`Attached listeners to ${dayCheckboxes.length} day checkboxes`);
+                    
+                    // Period buttons
+                    const periodBtns = document.querySelectorAll('#leaderboard-view .period-btn');
+                    periodBtns.forEach(btn => {
+                        btn.onclick = (e) => {
+                            AppSounds.play('click');
+                            this.setPeriod(btn.dataset.period);
+                        };
+                    });
+                    console.log(`Attached listeners to ${periodBtns.length} period buttons`);
+                    
+                    // Location buttons  
+                    const locationBtns = document.querySelectorAll('#leaderboard-view .location-btn');
+                    locationBtns.forEach(btn => {
+                        btn.onclick = (e) => {
+                            AppSounds.play('click');
+                            const location = btn.textContent === 'Combined' ? 'combined' : btn.textContent;
+                            this.setLocation(location);
+                        };
+                    });
+                    console.log(`Attached listeners to ${locationBtns.length} location buttons`);
+                    
+                    // Aspect dropdown
+                    const aspectDropdown = document.getElementById('leaderboardAspect');
+                    if (aspectDropdown) {
+                        aspectDropdown.onchange = (e) => {
+                            AppSounds.play('shuffle');
+                            this.animateAndUpdate();
+                        };
+                        console.log('Aspect dropdown listener attached');
                     }
-                }
-                
-                // Period buttons
-                document.querySelectorAll('#leaderboard-view .period-btn').forEach(btn => {
-                    btn.onclick = (e) => {
-                        AppSounds.play('click');
-                        this.setPeriod(e.target.dataset.period);
-                    };
-                });
-                
-                // Location buttons  
-                document.querySelectorAll('#leaderboard-view .location-btn').forEach(btn => {
-                    btn.onclick = (e) => {
-                        AppSounds.play('click');
-                        const location = e.target.textContent === 'Combined' ? 'combined' : e.target.textContent;
-                        this.setLocation(location);
-                    };
-                });
-                
-                // Aspect dropdown
-                const aspectDropdown = document.getElementById('leaderboardAspect');
-                if (aspectDropdown) {
-                    aspectDropdown.onchange = (e) => {
-                        AppSounds.play('shuffle');
-                        this.animateAndUpdate();
-                    };
-                }
-                
-                console.log('Leaderboard event listeners reinitialized for shared URL');
+                    
+                    console.log('All leaderboard event listeners initialized for shared URL');
+                }, 100); // Small delay to ensure DOM is ready
             }
             
             // Load state from URL parameters
@@ -12929,6 +12939,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else {
                             window.LeaderboardManager.loadStateFromUrl();
                         }
+                        // Ensure event listeners are initialized after loading
+                        setTimeout(() => {
+                            window.LeaderboardManager.initializeEventListeners();
+                        }, 200);
                         window.pendingLeaderboardLoad = null; // Clear the pending load
                     }, 100);
                 }
