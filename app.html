@@ -75,14 +75,24 @@
                     .catch(err => console.log('ServiceWorker registration failed:', err));
             });
             
-            // Listen for data updates from service worker
+            // Listen for messages from service worker
             navigator.serviceWorker.addEventListener('message', event => {
+                console.log('Service Worker message received:', event.data);
+                
                 if (event.data.type === 'DATA_UPDATED') {
                     console.log('Data updated via background sync');
                     // Refresh the dashboard with new data
                     if (window.VanguardData) {
                         window.VanguardData.updateDashboard();
                     }
+                } else if (event.data.type === 'NEW_VERSION_AVAILABLE') {
+                    console.log('New version available:', event.data.version);
+                    if (window.showUpdateNotification) {
+                        window.showUpdateNotification();
+                    }
+                } else if (event.data.type === 'SERVICE_WORKER_ACTIVATED') {
+                    console.log('Service worker activated with version:', event.data.version);
+                    // Could auto-reload here if desired
                 }
             });
         }
