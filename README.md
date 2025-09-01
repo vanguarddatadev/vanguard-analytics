@@ -83,9 +83,27 @@ The app pulls data from your Google Sheets via the Apps Script URL embedded in t
 For issues, check the browser console (F12) for error messages.
 
 ## Version
-v1.5 - Enhanced with advanced leaderboard, URL sharing, and improved user experience
+v1.5.2 - Enhanced with advanced leaderboard, URL sharing, and improved user experience
 
-### New in v1.5:
+### IMPORTANT: Version Update Checklist
+When updating to a new version, you MUST update ALL of these locations:
+1. **service-worker.js** - Line 2: `const VERSION = '1.5.2';`
+2. **manifest.json** - Line 4: `"version": "1.5.2"`
+3. **app.html** - Line 2061: Header display `v1.5.2`
+4. **app.html** - Line 52: Service worker URL `?v=1.5.2`
+5. **app.html** - Line 90: Current version check `const currentVersion = '1.5.2';`
+6. **app.html** - Line 12738: Update popup text `Version 1.5.2 Available!`
+7. **README.md** - Version section header
+
+⚠️ **Failure to update all locations will result in confusing version mismatches and update detection failures!**
+
+### New in v1.5.2:
+- 🔧 Fixed aggressive update prompts - only prompts for newer versions
+- 🔄 Update checks now happen during data fetch instead of every page load
+- ✅ Proper version comparison logic
+- 🚀 Removed problematic timestamp from service worker registration
+
+### Previous v1.5.1:
 - ✨ Advanced Leaderboard with customizable filters
 - 🔗 URL sharing system with hash-based shortened URLs
 - 📱 Smart notification system

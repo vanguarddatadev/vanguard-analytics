@@ -48,14 +48,13 @@
         // Service Worker registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Add timestamp to force check for new service worker
-                const swUrl = './service-worker.js?v=1.5.1&t=' + Date.now();
+                // Add version to service worker URL for cache busting on version changes
+                const swUrl = './service-worker.js?v=1.5.2';
                 navigator.serviceWorker.register(swUrl)
                     .then(registration => {
                         console.log('ServiceWorker registered:', registration);
                         
-                        // Check for updates immediately and every hour
-                        registration.update();
+                        // Check for updates every hour while app is open
                         setInterval(() => {
                             registration.update();
                         }, 3600000);
@@ -88,9 +87,30 @@
                         window.VanguardData.updateDashboard();
                     }
                 } else if (event.data.type === 'NEW_VERSION_AVAILABLE') {
-                    console.log('New version available:', event.data.version);
-                    if (window.showUpdateNotification) {
-                        window.showUpdateNotification();
+                    const currentVersion = '1.5.2'; // Current app version
+                    const newVersion = event.data.version;
+                    console.log('Version check - Current:', currentVersion, 'New:', newVersion);
+                    
+                    // Compare versions properly (converts "1.5.1" to comparable numbers)
+                    const parseVersion = (v) => v.split('.').map(n => parseInt(n, 10));
+                    const isNewer = (v1, v2) => {
+                        const parts1 = parseVersion(v1);
+                        const parts2 = parseVersion(v2);
+                        for (let i = 0; i < 3; i++) {
+                            if (parts2[i] > parts1[i]) return true;
+                            if (parts2[i] < parts1[i]) return false;
+                        }
+                        return false;
+                    };
+                    
+                    // Only show update if version is actually newer
+                    if (newVersion && isNewer(currentVersion, newVersion)) {
+                        console.log('Newer version available:', newVersion);
+                        if (window.showUpdateNotification) {
+                            window.showUpdateNotification();
+                        }
+                    } else {
+                        console.log('Same or older version, no update needed');
                     }
                 } else if (event.data.type === 'SERVICE_WORKER_ACTIVATED') {
                     console.log('Service worker activated with version:', event.data.version);
@@ -2038,7 +2058,7 @@
         <div class="nav-brand">
             <img src="./vanguard_logo.png" alt="Vanguard" style="height: 65px; margin-right: 18px; vertical-align: middle;">
             <span style="vertical-align: middle; font-size: 22px; font-weight: 600;">Bingo Analytics</span>
-            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.5.1</span>
+            <span style="vertical-align: middle; font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: 400;">v1.5.2</span>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
             <div class="nav-tabs">
@@ -3460,6 +3480,17 @@ Pool: Shows the number of historical events that match all your selected filters
             // Fetch data from Google Sheets API
             async fetchData() {
                 const API_URL = 'https://script.google.com/macros/s/AKfycbzbmJqRgd4kpZFNrpnKH3I7md6fM8eOsOoukEc2Mp_rDzUQNkpJ7u5msmZ1zJweTKij/exec';
+                
+                // Check for service worker updates whenever we fetch data
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.getRegistration().then(registration => {
+                        if (registration) {
+                            registration.update().then(() => {
+                                console.log('Checked for updates while fetching data');
+                            });
+                        }
+                    });
+                }
                 
                 return new Promise((resolve, reject) => {
                     try {
@@ -12704,7 +12735,7 @@ Hover over individual metrics for detailed averages.`)}
             `;
             
             popup.innerHTML = `
-                <h2 style="margin-bottom: 15px; font-size: 24px;">🎉 Version 1.5.1 Available!</h2>
+                <h2 style="margin-bottom: 15px; font-size: 24px;">🎉 Version 1.5.2 Available!</h2>
                 <div style="margin-bottom: 20px; text-align: left; font-size: 14px; line-height: 1.6;">
                     <strong>What's New:</strong><br>
                     • Advanced Leaderboard with URL sharing<br>

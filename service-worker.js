@@ -1,5 +1,5 @@
 // Service Worker for Vanguard Bingo Analytics PWA
-const VERSION = '1.5.1'; // Version 1.5.1 - Fixed shared URL blocking and aggressive update detection
+const VERSION = '1.5.2'; // Version 1.5.2 - Fixed aggressive update prompts, checks updates on data fetch
 const CACHE_NAME = `vanguard-v${VERSION}`;
 const DATA_CACHE_NAME = `vanguard-data-v${VERSION}`; // Force data refresh with version update
 
